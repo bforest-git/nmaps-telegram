@@ -60,6 +60,9 @@ def search_rules(message):
     for item in soup.find_all('a', class_='serp__item'):
         results.append([item.find_all('div')[0].text, item.find_all('div')[1].text])
         answer += '*' + item.find_all('div')[0].text.split('—')[0] + '* : ' + item.find_all('div')[1].text + '\n'
+    if not answer:
+        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.')
+        home(message)
     bot.send_message(message.chat.id, answer, parse_mode='markdown') 
         
 if __name__ == '__main__':
