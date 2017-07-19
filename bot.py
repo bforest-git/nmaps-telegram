@@ -17,6 +17,7 @@ def club(message):
     url_button = types.InlineKeyboardButton(text='Перейти в Клуб', url='https://yandex.ru/blog/narod-karta')
     keyboard.add(url_button)
     bot.send_message(message.chat.id, 'Для перехода в Клуб нажмите кнопку ниже.', reply_markup=keyboard)
+    home(message)
     
 @bot.message_handler(regexp='📖 Правила')
 def rules(message):
@@ -24,12 +25,14 @@ def rules(message):
     url_button = types.InlineKeyboardButton(text='Открыть правила', url='https://yandex.ru/support/nmaps/rules_2.html')
     keyboard.add(url_button)
     bot.send_message(message.chat.id, 'Для открытия справки нажмите кнопку ниже.', reply_markup=keyboard)
+    home(message)
     
 @bot.message_handler(regexp='🔎 Поиск')
 def search(message):
     if message.text == '🔎 Поиск':
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         keyboard.row('🔎 Клуб', '🔎 Правила')
+        keyboard.row('Вернуться')
         bot.send_message(message.chat.id, 'Где будем искать?', reply_markup=keyboard)
         bot.register_next_step_handler(message, search)
     elif message.text == '🔎 Правила' or message.text == '🔎 Клуб':
@@ -44,9 +47,12 @@ def search(message):
         home(message)
         
 def search_club(message):
-    pass
+    if message.text == 'Вернуться':
+        home(message)
 
 def search_rules(message):
+    if message.text == 'Вернуться':
+        home(message)
     page = requests.get('https://yandex.ru/support/search-results/?text=' + message.text.replace(' ', '+') + '&service=nmaps-guide')
     soup = BeautifulSoup(page.text, 'lxml')
     answer = ''
