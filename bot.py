@@ -3,15 +3,14 @@ from telebot import types
 from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
-test1 = '-235537432'
-test2 = '-236614825'
-test_message = '605'
 
 @bot.message_handler(commands=['start', 'home'])
 def home(message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    keyboard.row('📝 Клуб', '📖 Правила')
-    keyboard.row('🔎 Поиск')
+    keyboard.row('📌 Полезные ссылки')
+    keyboard.row('🔎 Поиск в Клубе', '🔎 Поиск в Правилах')
+    keyboard.row('🚫 Сообщить о перекрытии')
+    keyboard.row('📚 Частые вопросы', '✏ Служба поддержки')
     bot.send_message(message.chat.id, 'Пожалуйста, выберите действие.', reply_markup=keyboard)
     
 @bot.message_handler(regexp='📝 Клуб')
@@ -32,26 +31,20 @@ def rules(message):
     
 @bot.message_handler(regexp='🔎 Поиск')
 def search(message):
-    if message.text == '🔎 Поиск':
-        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        keyboard.row('🔎 Клуб', '🔎 Правила')
-        keyboard.row('Вернуться')
-        bot.send_message(message.chat.id, 'Где будем искать?', reply_markup=keyboard)
-        bot.register_next_step_handler(message, search)
-    elif message.text == '🔎 Правила' or message.text == '🔎 Клуб':
-        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        keyboard.row('Вернуться')
-        bot.send_message(message.chat.id, 'Напишите фразу для поиска.', reply_markup=keyboard)
-        if message.text == '🔎 Правила':
-            bot.register_next_step_handler(message, search_rules)
-        else:
-            bot.register_next_step_handler(message, search_club)
-    elif message.text == 'Вернуться':
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    keyboard.row('⬅ Вернуться')
+    bot.send_message(message.chat.id, 'Напишите фразу для поиска.', reply_markup=keyboard)
+    if message.text == '🔎 Поиск в Правилах':
+        bot.register_next_step_handler(message, search_rules)
+    elif message.text == '🔎 Поиск в Клубе':
+        bot.register_next_step_handler(message, search_club)
+    elif message.text == '⬅ Вернуться':
         home(message)
         
 def search_club(message):
-    if message.text == 'Вернуться':
+    if message.text == '⬅ Вернуться':
         home(message)
+        return
     page = requests.get('https://yandex.ru/blog/narod-karta/search?text=' + message.text.replace(' ', '+'))
     soup = BeautifulSoup(page.text, 'lxml')
     answer = ''
@@ -61,12 +54,16 @@ def search_club(message):
         link = 'https://yandex.ru' + item['href']
         answer += '[' + title + '](' + link + ')\n'
         answer += '____________________\n'
-    bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
+    if not answer:
+        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.') 
+    else:
+        bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
     home(message)
 
 def search_rules(message):
-    if message.text == 'Вернуться':
+    if message.text == '⬅ Вернуться':
         home(message)
+        return
     page = requests.get('https://yandex.ru/support/search-results/?text=' + message.text.replace(' ', '+') + '&service=nmaps-guide')
     soup = BeautifulSoup(page.text, 'lxml')
     answer = ''
@@ -79,7 +76,10 @@ def search_rules(message):
         link = 'https://yandex.ru' + item['href']
         answer += '[' + title + '](' + link + '): ' + excerpt + '\n'
         answer += '____________________\n'
-    bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
+    if not answer:
+        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.') 
+    else:
+        bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True)
     home(message)
     
 @bot.message_handler(content_types=['text'])
