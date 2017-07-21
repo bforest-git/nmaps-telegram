@@ -3,6 +3,9 @@ from telebot import types
 from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
+test1 = '-235537432'
+test2 = '-236614825'
+test_message = '605'
 
 @bot.message_handler(commands=['start', 'home'])
 def home(message):
@@ -49,6 +52,17 @@ def search(message):
 def search_club(message):
     if message.text == 'Вернуться':
         home(message)
+    page = requests.get('https://yandex.ru/blog/narod-karta/search?text=' + message.text.replace(' ', '+'))
+    soup = BeautifulSoup(page.text, 'lxml')
+    answer = ''
+    for item in soup.find_all('a', class_='b-serp-item'):
+        pass
+        title = item.find('h2').text
+        link = 'https://yandex.ru' + item['href']
+        answer += '[' + title + '](' + link + ')\n'
+        answer += '============\n'
+    bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
+    home(message)
 
 def search_rules(message):
     if message.text == 'Вернуться':
@@ -56,14 +70,33 @@ def search_rules(message):
     page = requests.get('https://yandex.ru/support/search-results/?text=' + message.text.replace(' ', '+') + '&service=nmaps-guide')
     soup = BeautifulSoup(page.text, 'lxml')
     answer = ''
-    results = []
     for item in soup.find_all('a', class_='serp__item'):
-        results.append([item.find_all('div')[0].text, item.find_all('div')[1].text])
-        answer += '*' + item.find_all('div')[0].text.split('—')[0] + '* : ' + item.find_all('div')[1].text + '\n'
-    if not answer:
-        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.')
-        home(message)
-    bot.send_message(message.chat.id, answer, parse_mode='markdown') 
+        if '...' in item.find_all('div')[0].text:
+            title = item.find_all('div')[0].text.split('...')[0]
+        else:
+            title = item.find_all('div')[0].text.split('—')[0]
+        excerpt = item.find_all('div')[1].text
+        link = 'https://yandex.ru' + item['href']
+        answer += '[' + title + '](' + link + '): ' + excerpt + '\n'
+        answer += '============\n'
+    bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
+    home(message)
+    
+@bot.message_handler(content_types=['text'])
+def find_roads_hashtags(message):
+    print('chat id: ' + str(message.chat.id))
+    print('message id: ' + str(message.message_id))
+    if message.forward_from:
+        print('forwarded from: ' + str(message.forward_from))
         
+@bot.callback_query_handler(func=lambda call:True)
+def test_callback(call):
+    if call.data == 'approved':
+        bot.edit_message_text('⬇ Перекрытие установлено ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
+    elif call.data == 'declined':
+        bot.edit_message_text('⬇ Недостаточно информации ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
+    elif call.data == 'spam':
+        bot.edit_message_text('⬇ Пользователь заблокирован ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
+
 if __name__ == '__main__':
     bot.polling()
