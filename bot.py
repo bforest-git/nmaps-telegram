@@ -60,7 +60,7 @@ def search_club(message):
         title = item.find('h2').text
         link = 'https://yandex.ru' + item['href']
         answer += '[' + title + '](' + link + ')\n'
-        answer += '============\n'
+        answer += '____________________\n'
     bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
     home(message)
 
@@ -78,7 +78,7 @@ def search_rules(message):
         excerpt = item.find_all('div')[1].text
         link = 'https://yandex.ru' + item['href']
         answer += '[' + title + '](' + link + '): ' + excerpt + '\n'
-        answer += '============\n'
+        answer += '____________________\n'
     bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
     home(message)
     
