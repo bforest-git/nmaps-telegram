@@ -13,20 +13,18 @@ def home(message):
     keyboard.row('📚 Частые вопросы', '✏ Служба поддержки')
     bot.send_message(message.chat.id, 'Пожалуйста, выберите действие.', reply_markup=keyboard)
     
-@bot.message_handler(regexp='📝 Клуб')
-def club(message):
+@bot.message_handler(regexp='📌 Полезные ссылки')
+def bookmarks(message):
     keyboard = types.InlineKeyboardMarkup()
-    url_button = types.InlineKeyboardButton(text='Перейти в Клуб', url='https://yandex.ru/blog/narod-karta')
-    keyboard.add(url_button)
-    bot.send_message(message.chat.id, 'Для перехода в Клуб нажмите кнопку ниже.', reply_markup=keyboard)
-    home(message)
-    
-@bot.message_handler(regexp='📖 Правила')
-def rules(message):
-    keyboard = types.InlineKeyboardMarkup()
-    url_button = types.InlineKeyboardButton(text='Открыть правила', url='https://yandex.ru/support/nmaps/rules_2.html')
-    keyboard.add(url_button)
-    bot.send_message(message.chat.id, 'Для открытия справки нажмите кнопку ниже.', reply_markup=keyboard)
+    url1 = types.InlineKeyboardButton(text='Правила', url='https://yandex.ru/support/nmaps/rules_2.html')
+    url2 = types.InlineKeyboardButton(text='Клуб', url='https://yandex.ru/blog/narod-karta')
+    url3 = types.InlineKeyboardButton(text='ПКК', url='https://pkk5.rosreestr.ru/')
+    url4 = types.InlineKeyboardButton(text='ФИАС', url='https://fias.nalog.ru/')
+    url5 = types.InlineKeyboardButton(text='ЕГРП365', url='https://egrp365.ru/map/')
+    url6 = types.InlineKeyboardButton(text='TerraServer', url='https://www.terraserver.com/')
+    url7 = types.InlineKeyboardButton(text='Реформа ЖКХ', url='https://www.reformagkh.ru/')
+    keyboard.add(url1, url2, url3, url4, url5, url6, url7)
+    bot.send_message(message.chat.id, 'Для перехода на сайт нажмите нужную кнопку из списка.', reply_markup=keyboard)
     home(message)
     
 @bot.message_handler(regexp='🔎 Поиск')
