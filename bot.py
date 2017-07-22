@@ -4,8 +4,13 @@ from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
 
+def private_chat(message):
+    if message.chat.type == 'private': return True
+
 @bot.message_handler(commands=['start', 'home'])
 def home(message):
+    if not private_chat(message):
+        return
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.row('📌 Полезные ссылки')
     keyboard.row('🔎 Поиск в Клубе', '🔎 Поиск в Правилах')
@@ -15,6 +20,8 @@ def home(message):
     
 @bot.message_handler(regexp='📌 Полезные ссылки')
 def bookmarks(message):
+    if not private_chat(message):
+        return
     keyboard = types.InlineKeyboardMarkup()
     url1 = types.InlineKeyboardButton(text='Правила', url='https://yandex.ru/support/nmaps/rules_2.html')
     url2 = types.InlineKeyboardButton(text='Клуб', url='https://yandex.ru/blog/narod-karta')
@@ -29,6 +36,8 @@ def bookmarks(message):
     
 @bot.message_handler(regexp='🔎 Поиск')
 def search(message):
+    if not private_chat(message):
+        return
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.row('⬅ Вернуться')
     bot.send_message(message.chat.id, 'Напишите фразу для поиска.', reply_markup=keyboard)
