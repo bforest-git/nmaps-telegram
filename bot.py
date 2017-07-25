@@ -4,8 +4,11 @@ from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
 
+
 def private_chat(message):
-    if message.chat.type == 'private': return True
+    if message.chat.type == 'private':
+        return True
+
 
 @bot.message_handler(commands=['start', 'home'])
 def home(message):
@@ -17,7 +20,8 @@ def home(message):
     keyboard.row('🚫 Сообщить о перекрытии')
     keyboard.row('📚 Частые вопросы', '✏ Служба поддержки')
     bot.send_message(message.chat.id, 'Пожалуйста, выберите действие.', reply_markup=keyboard)
-    
+
+
 @bot.message_handler(regexp='📌 Полезные ссылки')
 def bookmarks(message):
     if not private_chat(message):
@@ -33,7 +37,8 @@ def bookmarks(message):
     keyboard.add(url1, url2, url3, url4, url5, url6, url7)
     bot.send_message(message.chat.id, 'Для перехода на сайт нажмите нужную кнопку из списка.', reply_markup=keyboard)
     home(message)
-    
+
+
 @bot.message_handler(regexp='🔎 Поиск')
 def search(message):
     if not private_chat(message):
@@ -47,7 +52,8 @@ def search(message):
         bot.register_next_step_handler(message, search_club)
     elif message.text == '⬅ Вернуться':
         home(message)
-        
+
+
 def search_club(message):
     if message.text == '⬅ Вернуться':
         home(message)
@@ -62,10 +68,11 @@ def search_club(message):
         answer += '[' + title + '](' + link + ')\n'
         answer += '____________________\n'
     if not answer:
-        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.') 
+        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.')
     else:
-        bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True) 
+        bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True)
     home(message)
+
 
 def search_rules(message):
     if message.text == '⬅ Вернуться':
@@ -84,19 +91,21 @@ def search_rules(message):
         answer += '[' + title + '](' + link + '): ' + excerpt + '\n'
         answer += '____________________\n'
     if not answer:
-        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.') 
+        bot.send_message(message.chat.id, 'К сожалению, ничего не найдено.')
     else:
         bot.send_message(message.chat.id, answer, parse_mode='markdown', disable_web_page_preview=True)
     home(message)
-    
+
+
 @bot.message_handler(content_types=['text'])
 def find_roads_hashtags(message):
     print('chat id: ' + str(message.chat.id))
     print('message id: ' + str(message.message_id))
     if message.forward_from:
         print('forwarded from: ' + str(message.forward_from))
-        
-@bot.callback_query_handler(func=lambda call:True)
+
+
+@bot.callback_query_handler(func=lambda call: True)
 def test_callback(call):
     if call.data == 'approved':
         bot.edit_message_text('⬇ Перекрытие установлено ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -104,6 +113,7 @@ def test_callback(call):
         bot.edit_message_text('⬇ Недостаточно информации ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
     elif call.data == 'spam':
         bot.edit_message_text('⬇ Пользователь заблокирован ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
+
 
 if __name__ == '__main__':
     bot.polling()
