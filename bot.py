@@ -14,6 +14,8 @@ db = sqlite3.connect('database.db')
 c = db.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS roads (username text, chat_message_id text, mods_message_id text, roads_message_id text)')
 c.execute('CREATE TABLE IF NOT EXISTS banned (username text)')
+c.execute('CREATE TABLE IF NOT EXISTS admins (username text)')
+c.execute('INSERT INTO admins VALUES ("alexfox")')
 db.commit()
 c.close()
 db.close()
@@ -21,6 +23,14 @@ db.close()
 
 def private_chat(message):
     if message.chat.type == 'private':
+        return True
+
+
+def from_admin(message):
+    db = sqlite3.connect('database.db')
+    c = db.cursor()
+    c.execute('SELECT username FROM admins WHERE username = ?', [str(message.from_user.username)])
+    if c.fetchall():
         return True
 
 
@@ -33,6 +43,8 @@ def home(message):
     keyboard.row('🔎 Поиск в Клубе', '🔎 Поиск в Правилах')
     keyboard.row('🚫 Сообщить о перекрытии')
     keyboard.row('📚 Частые вопросы', '✏ Служба поддержки')
+    if from_admin(message):
+        keyboard.row('Чёрный список')
     bot.send_message(message.chat.id, 'Пожалуйста, выберите действие.', reply_markup=keyboard)
 
 
