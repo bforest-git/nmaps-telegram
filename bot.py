@@ -1,10 +1,22 @@
-import logging, requests, telebot
+import logging, requests, sqlite3, telebot
 from telebot import types
 from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
 logger = telebot.logger
-telebot.logger.setLevel(logging.DEBUG)
+telebot.logger.setLevel(logging.ERROR)
+
+nmaps_chat = '-1001136617457'
+mods_chat = '-240980847'
+roads_chat = '-227479062'
+
+db = sqlite3.connect('database.db')
+c = db.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS roads (username text, chat_message_id text, mods_message_id text, roads_message_id text)')
+c.execute('CREATE TABLE IF NOT EXISTS banned (username text)')
+db.commit()
+c.close()
+db.close()
 
 
 def private_chat(message):
@@ -100,21 +112,74 @@ def search_rules(message):
 
 
 @bot.message_handler(content_types=['text'])
-def find_roads_hashtags(message):
-    print('chat id: ' + str(message.chat.id))
-    print('message id: ' + str(message.message_id))
-    if message.forward_from:
-        print('forwarded from: ' + str(message.forward_from))
+def roads(message):
+    if '#перекрытие' in message.text:
+        db = sqlite3.connect('database.db')
+        c = db.cursor()
+        c.execute('SELECT username FROM banned WHERE username = ?', [str(message.from_user.username)])
+        if c.fetchall():
+            bot.reply_to(message, 'Вы были внесены в черный список и не можете передавать сообщения.')
+            return
+
+        bot.send_message(message.chat.id, '@' + message.from_user.username + ', сообщение принято. Спасибо!')
+
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.row(types.InlineKeyboardButton(text='↩ Передать сотрудникам', callback_data='road_mod_approve'))
+        keyboard.row(types.InlineKeyboardButton(text='🔫 Запросить информацию', callback_data='road_mod_request_info'))
+        keyboard.row(types.InlineKeyboardButton(text='🚫 Вандализм', callback_data='road_mod_ban'))
+        mods_message = bot.send_message(mods_chat, 'Пользователь @' + message.from_user.username + ' оставил следующее сообщение. Просьба проверить информацию.', reply_markup=keyboard)
+        bot.forward_message(mods_chat, nmaps_chat, message.message_id)
+        c.execute('INSERT INTO roads VALUES (?, ?, ?, ?)', [str(message.from_user.username), str(message.message_id), str(mods_message.message_id), str(0)])
+        db.commit()
+        db.close()
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def test_callback(call):
-    if call.data == 'approved':
-        bot.edit_message_text('⬇ Перекрытие установлено ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
-    elif call.data == 'declined':
-        bot.edit_message_text('⬇ Недостаточно информации ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
-    elif call.data == 'spam':
-        bot.edit_message_text('⬇ Пользователь заблокирован ⬇', chat_id=call.message.chat.id, message_id=call.message.message_id)
+def callback(call):
+    db = sqlite3.connect('database.db')
+    c = db.cursor()
+
+    if call.data == 'road_mod_approve':
+        bot.edit_message_text('✅ Направлено сотрудникам', chat_id=call.message.chat.id, message_id=call.message.message_id)
+
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.row(types.InlineKeyboardButton(text='🚧 Перекрытие установлено', callback_data='road_closed'))
+        keyboard.row(types.InlineKeyboardButton(text='🚗 Перекрытие снято', callback_data='road_opened'))
+        keyboard.row(types.InlineKeyboardButton(text='⚠ Инфоточка установлена', callback_data='info_added'))
+        keyboard.row(types.InlineKeyboardButton(text='🔫 Запросить информацию', callback_data='road_request_info'))
+        roads_message = bot.send_message(roads_chat, 'Добрый день. Появилась новая информация о перекрытии.', reply_markup=keyboard)
+
+        c.execute('SELECT chat_message_id FROM roads WHERE mods_message_id = ?', [str(call.message.message_id)])
+        chat_message_id = c.fetchall()[0][0]
+        bot.forward_message(roads_chat, nmaps_chat, chat_message_id)
+
+        c.execute('UPDATE roads SET roads_message_id = ? WHERE chat_message_id = ?', [str(roads_message.message_id), str(chat_message_id)])
+    elif call.data == 'road_mod_request_info':
+        bot.edit_message_text('📋 Ожидается информация', chat_id=call.message.chat.id, message_id=call.message.message_id)
+    elif call.data == 'road_mod_ban':
+        bot.edit_message_text('🚫 Пользователь заблокирован', chat_id=call.message.chat.id, message_id=call.message.message_id)
+        c.execute('INSERT INTO banned SELECT username FROM roads WHERE mods_message_id = ?', [str(call.message.message_id)])
+    elif call.data == 'road_closed':
+        bot.edit_message_text('✅ Перекрытие установлено', chat_id=call.message.chat.id, message_id=call.message.message_id)
+        c.execute('SELECT chat_message_id FROM roads WHERE roads_message_id = ?', [call.message.message_id])
+        chat_message_id = c.fetchall()
+        bot.send_message(nmaps_chat, 'Перекрытие установлено, спасибо!', reply_to_message_id=chat_message_id)
+    elif call.data == 'road_opened':
+        bot.edit_message_text('✅ Перекрытие снято', chat_id=call.message.chat.id, message_id=call.message.message_id)
+        c.execute('SELECT chat_message_id FROM roads WHERE roads_message_id = ?', [call.message.message_id])
+        chat_message_id = c.fetchall()
+        bot.send_message(nmaps_chat, 'Перекрытие снято, спасибо!', reply_to_message_id=chat_message_id)
+    elif call.data == 'info_added':
+        bot.edit_message_text('✅ Инфоточка установлена', chat_id=call.message.chat.id, message_id=call.message.message_id)
+        c.execute('SELECT chat_message_id FROM roads WHERE roads_message_id = ?', [call.message.message_id])
+        chat_message_id = c.fetchall()
+        bot.send_message(nmaps_chat, 'Инфоточка установлена, спасибо!', reply_to_message_id=chat_message_id)
+    elif call.data == 'road_request_info':
+        bot.edit_message_text('📋 Ожидается информация', chat_id=call.message.chat.id, message_id=call.message.message_id)
+        c.execute('INSERT INTO banned SELECT username FROM roads WHERE mods_message_id = ?', [str(call.message.message_id)])
+
+    db.commit()
+    db.close()
 
 
 if __name__ == '__main__':
