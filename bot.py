@@ -1,8 +1,10 @@
-import requests, telebot
+import logging, requests, telebot
 from telebot import types
 from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
+logger = telebot.logger
+telebot.logger.setLevel(logging.DEBUG)
 
 
 def private_chat(message):
