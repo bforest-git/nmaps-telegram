@@ -1,6 +1,8 @@
-import logging, requests, sqlite3, telebot
-from telebot import types
+import logging, os, re, requests, sqlite3, telebot, time
 from bs4 import BeautifulSoup
+from telebot import types
+from selenium import webdriver
+from PIL import Image
 
 bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
 logger = telebot.logger
@@ -9,6 +11,10 @@ telebot.logger.setLevel(logging.ERROR)
 nmaps_chat = '-1001136617457'
 mods_chat = '-240980847'
 roads_chat = '-227479062'
+
+nmaps_link = re.compile('https:\/\/n.maps.yandex[a-zA-Z./#!?=&0-9%]+')
+nmaps_short_link = re.compile('https:\/\/n.maps.yandex.[a-z]+\/-\/[A-Za-z0-9-]+')
+maps_link = re.compile('https:\/\/yandex.[a-z]+\/maps\/[0-9a-zA-Z/?=.%&-]*')
 
 db = sqlite3.connect('database.db')
 c = db.cursor()
@@ -41,9 +47,9 @@ def home(message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.row('📌 Полезные ссылки')
     keyboard.row('🔎 Поиск в Клубе', '🔎 Поиск в Правилах')
-    keyboard.row('🚫 Сообщить о перекрытии')
-    keyboard.row('📚 Частые вопросы', '✏ Служба поддержки')
     if from_admin(message):
+        keyboard.row('🚫 Сообщить о перекрытии')
+        keyboard.row('📚 Частые вопросы', '✏ Служба поддержки')
         keyboard.row('Чёрный список')
     bot.send_message(message.chat.id, 'Пожалуйста, выберите действие.', reply_markup=keyboard)
 
@@ -125,7 +131,9 @@ def search_rules(message):
 
 @bot.message_handler(content_types=['text'])
 def roads(message):
+    links = re.findall(nmaps_link, message.text) + re.findall(nmaps_short_link, message.text) + re.findall(maps_link, message.text)
     if '#перекрытие' in message.text:
+        return
         db = sqlite3.connect('database.db')
         c = db.cursor()
         c.execute('SELECT username FROM banned WHERE username = ?', [str(message.from_user.username)])
@@ -144,6 +152,31 @@ def roads(message):
         c.execute('INSERT INTO roads VALUES (?, ?, ?, ?)', [str(message.from_user.username), str(message.message_id), str(mods_message.message_id), str(0)])
         db.commit()
         db.close()
+    elif links:
+        bot.send_chat_action(message.chat.id, 'upload_photo')
+        chrome = 'Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/54.0'
+        webdriver.DesiredCapabilities.PHANTOMJS['phantomjs.page.customHeaders.User-Agent'] = chrome
+        driver = webdriver.PhantomJS('./phantomjs')
+        driver.set_window_size(1280, 1024)
+
+        for link in links:
+            driver.get(link)
+            time.sleep(10)
+            bot.send_chat_action(message.chat.id, 'upload_photo')
+            if 'n.' in link:
+                driver.find_element_by_xpath('//div[@class="nk-welcome-screen-view__start"]/button').click()
+            image_name = str(time.time())
+            driver.save_screenshot(image_name + '.png')
+            if '#!/?z=' in driver.current_url:
+                i = Image.open(image_name + '.png')
+                i.crop((0, 0, 930, 1024)).save(image_name, 'PNG')
+                bot.send_photo(message.chat.id, open(image_name, 'rb'))
+            else:
+                bot.send_photo(message.chat.id, open(image_name + '.png', 'rb'))
+            try:
+                os.remove('.' + image_name + '.png')
+            except Exception:
+                pass
 
 
 @bot.callback_query_handler(func=lambda call: True)
