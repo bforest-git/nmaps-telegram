@@ -12,7 +12,7 @@ class Prefix:
         return call.data.startswith(self.prefix)
 
 
-bot = telebot.TeleBot(os.getenv('TLGAPIKEY', False))
+bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0'))
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
@@ -30,17 +30,16 @@ kbrd_btn = types.InlineKeyboardButton
 db = psycopg2.connect(**db_creds)
 c = db.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS roads (username text,
+                                               chat_id bigint,
                                                chat_message_id bigint,
                                                mods_message_id bigint,
                                                roads_message_id bigint)''')
+
 c.execute('''CREATE TABLE IF NOT EXISTS banned (username text primary key)''')
 c.execute('''CREATE TABLE IF NOT EXISTS admins (username text primary key)''')
-try:
-    c.execute('''INSERT INTO admins VALUES ('leva18777')''')
-    c.execute('''INSERT INTO admins VALUES ('alexfox')''')
-except psycopg2.IntegrityError:
-    pass
+
 db.commit()
+c.close()
 db.close()
 
 
@@ -67,8 +66,8 @@ def home(message):
     keyboard.row(MENU_LINKS)
     keyboard.row(MENU_SEARCH_CLUB, MENU_SEARCH_RULES)
     keyboard.row(MENU_ROADS)
+    keyboard.row(MENU_FAQ, MENU_SUPPORT)
     if is_admin(message.from_user.username):
-        keyboard.row(MENU_FAQ, MENU_SUPPORT)
         keyboard.row(MENU_SETTINGS)
     bot.send_message(message.chat.id,
                      BOT_ACTION_SELECT,
@@ -223,7 +222,7 @@ def del_admin(message):
 
 @bot.message_handler(content_types=['text'])
 def roads(message):
-    if '#перекрытие' not in message.text.lower():
+    if '#перекрытие' not in message.text.lower() or message.chat.id == roads_chat or message.chat.id == mods_chat:
         return
 
     bot.send_message(message.chat.id,
@@ -244,9 +243,9 @@ def roads(message):
                                          BOT_NEW_ROADBLOCK,
                                          reply_markup=keyboard)
 
-        bot.forward_message(roads_chat, nmaps_chat, message.message_id)
-        c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s)''',
-                  (message.from_user.username, message.message_id,
+        bot.forward_message(roads_chat, message.chat.id, message.message_id)
+        c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s, %s)''',
+                  (message.from_user.username, message.chat.id, message.message_id,
                    0, roads_message.message_id))
     else:
         keyboard = types.InlineKeyboardMarkup()
@@ -259,9 +258,9 @@ def roads(message):
 
         msg = BOT_REQUEST_CHECK.format(message.from_user.username)
         mods_message = bot.send_message(mods_chat, msg, reply_markup=keyboard)
-        bot.forward_message(mods_chat, nmaps_chat, message.message_id)
-        c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s)''',
-                  (message.from_user.username, message.message_id,
+        bot.forward_message(mods_chat, message.chat.id, message.message_id)
+        c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s, %s)''',
+                  (message.from_user.username, message.chat.id, message.message_id,
                    mods_message.message_id, 0))
     db.commit()
     db.close()
@@ -291,11 +290,15 @@ def roads_callback(call):
                                          BOT_NEW_ROADBLOCK,
                                          reply_markup=keyboard)
 
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE mods_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
         c.execute('''SELECT chat_message_id FROM roads
                      WHERE mods_message_id = %s''',
                   (call.message.message_id,))
         chat_message_id = c.fetchone()[0]
-        bot.forward_message(roads_chat, nmaps_chat, chat_message_id)
+        bot.forward_message(roads_chat, chat_id, chat_message_id)
 
         c.execute('''UPDATE roads SET roads_message_id = %s
                      WHERE chat_message_id = %s''',
@@ -319,29 +322,41 @@ def roads_callback(call):
     elif call.data == 'road_closed':
         bot.edit_message_text(BOT_ROADBLOCK_SET, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE roads_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
         c.execute('''SELECT chat_message_id FROM roads
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
-        chat_message_id = c.fetchall()
-        bot.send_message(nmaps_chat, BOT_ROADBLOCK_SET_USR,
+        chat_message_id = c.fetchone()[0]
+        bot.send_message(chat_id, BOT_ROADBLOCK_SET_USR,
                          reply_to_message_id=chat_message_id)
     elif call.data == 'road_opened':
         bot.edit_message_text(BOT_ROADBLOCK_DEL, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE roads_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
         c.execute('''SELECT chat_message_id FROM roads
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
-        chat_message_id = c.fetchall()
-        bot.send_message(nmaps_chat, BOT_ROADBLOCK_DEL_USR,
+        chat_message_id = c.fetchone()[0]
+        bot.send_message(chat_id, BOT_ROADBLOCK_DEL_USR,
                          reply_to_message_id=chat_message_id)
     elif call.data == 'road_info_added':
         bot.edit_message_text(BOT_INFOPOINT_SET, chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE roads_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
         c.execute('''SELECT chat_message_id FROM roads
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
-        chat_message_id = c.fetchall()
-        bot.send_message(nmaps_chat, BOT_INFOPOINT_SET_USR,
+        chat_message_id = c.fetchone()[0]
+        bot.send_message(chat_id, BOT_INFOPOINT_SET_USR,
                          reply_to_message_id=chat_message_id)
 
     db.commit()
