@@ -67,8 +67,8 @@ def home(message):
     keyboard.row(MENU_LINKS)
     keyboard.row(MENU_SEARCH_CLUB, MENU_SEARCH_RULES)
     keyboard.row(MENU_ROADS)
-    keyboard.row(MENU_FAQ, MENU_SUPPORT)
     if is_admin(message.from_user.username):
+        keyboard.row(MENU_FAQ, MENU_SUPPORT)
         keyboard.row(MENU_SETTINGS)
     bot.send_message(message.chat.id,
                      BOT_ACTION_SELECT,
