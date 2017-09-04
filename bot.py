@@ -35,9 +35,11 @@ c.execute('''CREATE TABLE IF NOT EXISTS roads (username text,
                                                roads_message_id bigint)''')
 c.execute('''CREATE TABLE IF NOT EXISTS banned (username text primary key)''')
 c.execute('''CREATE TABLE IF NOT EXISTS admins (username text primary key)''')
-c.execute('''DELETE FROM admins''')
-c.execute('''INSERT INTO admins VALUES ('leva18777')''')
-c.execute('''INSERT INTO admins VALUES ('alexfox')''')
+try:
+    c.execute('''INSERT INTO admins VALUES ('leva18777')''')
+    c.execute('''INSERT INTO admins VALUES ('alexfox')''')
+except psycopg2.IntegrityError:
+    pass
 db.commit()
 db.close()
 
