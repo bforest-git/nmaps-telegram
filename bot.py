@@ -12,7 +12,7 @@ class Prefix:
         return call.data.startswith(self.prefix)
 
 
-bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0'))
+bot = telebot.TeleBot(os.getenv('TLGAPIKEY', False))
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
@@ -24,6 +24,8 @@ db_creds = {'host': 'localhost',
 nmaps_chat = os.getenv('NMAPSCHAT', '-1001136617457')
 mods_chat = os.getenv('MODSCHAT', '-240980847')
 roads_chat = os.getenv('ROADSCHAT', '-227479062')
+
+alexfox = '30375360'
 
 kbrd_btn = types.InlineKeyboardButton
 
@@ -65,7 +67,7 @@ def home(message):
                                          one_time_keyboard=True)
     keyboard.row(MENU_LINKS)
     keyboard.row(MENU_SEARCH_CLUB, MENU_SEARCH_RULES)
-    keyboard.row(MENU_ROADS)
+    keyboard.row(MENU_ROADS, MENU_FEEDBACK)
     if is_admin(message.from_user.username):
         keyboard.row(MENU_FAQ, MENU_SUPPORT)
         keyboard.row(MENU_SETTINGS)
@@ -190,6 +192,24 @@ def report_roads(message):
     if not private_chat(message):
         return
     bot.send_message(message.chat.id, BOT_PRIVATE_ROAD_REPORT_USR)
+    home(message)
+
+
+@bot.message_handler(regexp=MENU_FEEDBACK)
+def feedback(message):
+    if not private_chat(message):
+        return
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,
+                                         one_time_keyboard=True)
+    keyboard.row(MENU_RETURN)
+    bot.send_message(message.chat.id, BOT_SEND_FEEDBACK_USR, reply_markup=keyboard)
+    bot.register_next_step_handler(message, send_feedback)
+
+
+def send_feedback(message):
+    if message.text != MENU_RETURN:
+        bot.send_message(alexfox, message.text)
+        bot.send_message(message.chat.id, BOT_FEEDBACK_SENT_USR)
     home(message)
 
 
