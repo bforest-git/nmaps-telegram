@@ -1,4 +1,4 @@
-import logging, os, requests, psycopg2, telebot, time
+import logging, os, requests, psycopg2, telebot
 from telebot import types
 from phrases import *
 from bs4 import BeautifulSoup
@@ -60,7 +60,7 @@ def is_admin(user):
 
 
 @bot.message_handler(commands=['start', 'home'])
-def home(message):
+def home(message, user_override=None):
     if not private_chat(message):
         return
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,
@@ -68,7 +68,7 @@ def home(message):
     keyboard.row(MENU_LINKS)
     keyboard.row(MENU_SEARCH_CLUB, MENU_SEARCH_RULES)
     keyboard.row(MENU_ROADS, MENU_FEEDBACK)
-    if is_admin(message.from_user.username):
+    if is_admin(user_override or message.from_user.username):
         keyboard.row(MENU_FAQ, MENU_SUPPORT)
         keyboard.row(MENU_SETTINGS)
     bot.send_message(message.chat.id,
@@ -226,7 +226,7 @@ def add_admin(message):
     c.close()
     db.close()
     bot.send_message(message.chat.id, PREF_ADDED_ADMIN_USR)
-    home(message)
+    home(message, user_override=message.from_user.username)
 
 
 def del_admin(message):
@@ -237,7 +237,7 @@ def del_admin(message):
     c.close()
     db.close()
     bot.send_message(message.chat.id, PREF_DELED_ADMIN_USR)
-    home(message)
+    home(message, user_override=message.from_user.username)
 
 
 @bot.message_handler(content_types=['text'])
@@ -422,7 +422,7 @@ def prefs_callback(call):
                          chat_id=call.message.chat.id,
                          reply_markup=keyboard)
     elif call.data == 'prefs_return':
-        home(call.message)
+        home(call.message, user_override=call.from_user.username)
 
 
 @bot.callback_query_handler(func=Prefix('admin_'))
@@ -444,7 +444,7 @@ def admin_callback(call):
             msg += '{}) @{}\n'.format(idx, user[0])
         bot.send_message(text=msg,
                          chat_id=call.message.chat.id)
-        home(call.message)
+        home(call.message, user_override=call.from_user.username)
 
 
 if __name__ == '__main__':
