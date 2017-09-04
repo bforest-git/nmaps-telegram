@@ -12,7 +12,7 @@ class Prefix:
         return call.data.startswith(self.prefix)
 
 
-bot = telebot.TeleBot(os.getenv('TLGAPIKEY'))
+bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '331488080:AAH8PEA9WnsZtFubYnwFI5EWDq1fvqb9ZAE'))
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
