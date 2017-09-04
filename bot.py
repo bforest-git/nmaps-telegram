@@ -242,7 +242,7 @@ def del_admin(message):
 
 @bot.message_handler(content_types=['text'])
 def roads(message):
-    if '#перекрытие' not in message.text.lower() or message.chat.id == roads_chat or message.chat.id == mods_chat:
+    if '#перекрытие' not in message.text.lower() or str(message.chat.id) == roads_chat or str(message.chat.id) == mods_chat:
         return
 
     bot.send_message(message.chat.id,
