@@ -1,4 +1,4 @@
-import logging, os, requests, psycopg2, telebot
+import logging, os, requests, psycopg2, telebot, time
 from telebot import types
 from phrases import *
 from bs4 import BeautifulSoup
@@ -12,7 +12,7 @@ class Prefix:
         return call.data.startswith(self.prefix)
 
 
-bot = telebot.TeleBot(os.getenv('TLGAPIKEY', False))
+bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0'))
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
@@ -259,11 +259,11 @@ def roads(message):
                               callback_data='road_opened'))
         keyboard.row(kbrd_btn(text=BTN_ROADS_INFOPOINT,
                               callback_data='road_info_added'))
+
+        bot.forward_message(roads_chat, message.chat.id, message.message_id)
         roads_message = bot.send_message(roads_chat,
                                          BOT_NEW_ROADBLOCK,
                                          reply_markup=keyboard)
-
-        bot.forward_message(roads_chat, message.chat.id, message.message_id)
         c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s, %s)''',
                   (message.from_user.username, message.chat.id, message.message_id,
                    0, roads_message.message_id))
@@ -306,9 +306,6 @@ def roads_callback(call):
                               callback_data='road_opened'))
         keyboard.row(kbrd_btn(text=BTN_ROADS_INFOPOINT,
                               callback_data='road_info_added'))
-        roads_message = bot.send_message(roads_chat,
-                                         BOT_NEW_ROADBLOCK,
-                                         reply_markup=keyboard)
 
         c.execute('''SELECT chat_id FROM roads
                      WHERE mods_message_id = %s''',
@@ -319,6 +316,9 @@ def roads_callback(call):
                   (call.message.message_id,))
         chat_message_id = c.fetchone()[0]
         bot.forward_message(roads_chat, chat_id, chat_message_id)
+        roads_message = bot.send_message(roads_chat,
+                                         BOT_NEW_ROADBLOCK,
+                                         reply_markup=keyboard)
 
         c.execute('''UPDATE roads SET roads_message_id = %s
                      WHERE chat_message_id = %s''',
