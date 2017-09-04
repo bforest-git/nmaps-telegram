@@ -184,6 +184,14 @@ def search_rules(message):
     home(message)
 
 
+@bot.message_handler(regexp=MENU_ROADS)
+def report_roads(message):
+    if not private_chat(message):
+        return
+    bot.send_message(message.chat.id, BOT_PRIVATE_ROAD_REPORT_USR)
+    home(message)
+
+
 def add_admin(message):
     db = psycopg2.connect(**db_creds)
     c = db.cursor()
