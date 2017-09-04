@@ -1,4 +1,4 @@
-import logging, requests, psycopg2, telebot
+import logging, os, requests, psycopg2, telebot
 from telebot import types
 from phrases import *
 from bs4 import BeautifulSoup
@@ -12,17 +12,18 @@ class Prefix:
         return call.data.startswith(self.prefix)
 
 
-bot = telebot.TeleBot('405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0')
+bot = telebot.TeleBot(os.getenv('TLGAPIKEY', False))
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
-db_creds = {'dbname': 'bot',
-            'user': 'ubuntu',
-            'password': 'sas'}
+db_creds = {'host': 'localhost',
+            'dbname': os.getenv('DBNAME', 'bot'),
+            'user': os.getenv('DBUSER', 'ubuntu'),
+            'password': os.getenv('DBPASS', 'bot')}
 
-nmaps_chat = '-1001136617457'
-mods_chat = '-240980847'
-roads_chat = '-227479062'
+nmaps_chat = os.getenv('NMAPSCHAT', '-1001136617457')
+mods_chat = os.getenv('MODSCHAT', '-240980847')
+roads_chat = os.getenv('ROADSCHAT', '-227479062')
 
 kbrd_btn = types.InlineKeyboardButton
 
