@@ -342,7 +342,8 @@ def roads_callback(call):
                       WHERE mods_message_id = %s)''',
                   (call.message.message_id,))
     elif call.data == 'road_closed':
-        bot.edit_message_text(BOT_ROADBLOCK_SET, chat_id=call.message.chat.id,
+        bot.edit_message_text(BOT_ROADBLOCK_SET.format(call.from_user.username),
+                              chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         c.execute('''SELECT chat_id FROM roads
                      WHERE roads_message_id = %s''',
@@ -355,7 +356,8 @@ def roads_callback(call):
         bot.send_message(chat_id, BOT_ROADBLOCK_SET_USR,
                          reply_to_message_id=chat_message_id)
     elif call.data == 'road_opened':
-        bot.edit_message_text(BOT_ROADBLOCK_DEL, chat_id=call.message.chat.id,
+        bot.edit_message_text(BOT_ROADBLOCK_DEL.format(call.from_user.username),
+                              chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         c.execute('''SELECT chat_id FROM roads
                      WHERE roads_message_id = %s''',
@@ -368,7 +370,8 @@ def roads_callback(call):
         bot.send_message(chat_id, BOT_ROADBLOCK_DEL_USR,
                          reply_to_message_id=chat_message_id)
     elif call.data == 'road_info_added':
-        bot.edit_message_text(BOT_INFOPOINT_SET, chat_id=call.message.chat.id,
+        bot.edit_message_text(BOT_INFOPOINT_SET.format(call.from_user.username),
+                              chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         c.execute('''SELECT chat_id FROM roads
                      WHERE roads_message_id = %s''',
