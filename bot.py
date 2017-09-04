@@ -12,7 +12,7 @@ class Prefix:
         return call.data.startswith(self.prefix)
 
 
-bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '405295345:AAEiq-A3mEVsE203a0qOM3z2QCpPOlMKbZ0'))
+bot = telebot.TeleBot(os.getenv('TLGAPIKEY'))
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
@@ -242,6 +242,8 @@ def del_admin(message):
 
 @bot.message_handler(content_types=['text'])
 def roads(message):
+    if message.from_user.username == 'combot':
+        bot.delete_message(message.chat.id, message.id)
     if '#перекрытие' not in message.text.lower() or str(message.chat.id) == roads_chat or str(message.chat.id) == mods_chat:
         return
 
