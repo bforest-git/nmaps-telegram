@@ -16,7 +16,7 @@ bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '331488080:AAH8PEA9WnsZtFubYnwFI5EW
 bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
-db_creds = {'host': 'localhost',
+db_creds = {'host': os.getenv('DBHOST', 'localhost'),
             'dbname': os.getenv('DBNAME', 'bot'),
             'user': os.getenv('DBUSER', 'ubuntu'),
             'password': os.getenv('DBPASS', 'bot')}
