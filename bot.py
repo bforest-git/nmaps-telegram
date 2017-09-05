@@ -27,6 +27,8 @@ roads_chat = os.getenv('ROADSCHAT', '-227479062')
 
 alexfox = '30375360'
 
+staff = ['Borodin', 'Kalashnikov', 'expertSerg', 'Khudozhnikov', 'Soloviev', 'Kruzhalov']
+
 kbrd_btn = types.InlineKeyboardButton
 
 db = psycopg2.connect(**db_creds)
@@ -342,6 +344,9 @@ def roads_callback(call):
                       WHERE mods_message_id = %s)''',
                   (call.message.message_id,))
     elif call.data == 'road_closed':
+        if call.from_user.last_name not in staff:
+            bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
+            return
         bot.edit_message_text(BOT_ROADBLOCK_SET.format(call.from_user.username),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -356,6 +361,9 @@ def roads_callback(call):
         bot.send_message(chat_id, BOT_ROADBLOCK_SET_USR,
                          reply_to_message_id=chat_message_id)
     elif call.data == 'road_opened':
+        if call.from_user.last_name not in staff:
+            bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
+            return
         bot.edit_message_text(BOT_ROADBLOCK_DEL.format(call.from_user.username),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
@@ -370,6 +378,9 @@ def roads_callback(call):
         bot.send_message(chat_id, BOT_ROADBLOCK_DEL_USR,
                          reply_to_message_id=chat_message_id)
     elif call.data == 'road_info_added':
+        if call.from_user.last_name not in staff:
+            bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
+            return
         bot.edit_message_text(BOT_INFOPOINT_SET.format(call.from_user.username),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
