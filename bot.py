@@ -296,12 +296,14 @@ def roads_callback(call):
     c = db.cursor()
 
     if call.data == 'road_mod_approve':
-        if 'Выясняет' in call.message.text and call.from_user.username not in call.message.text:
+        if 'Выясняет' in call.message.text and call.from_user.first_name + ' ' + call.from_user.last_name not in call.message.text:
             bot.answer_callback_query(call.id, text=BOT_UNDER_INVESTIGATION)
             return
-        bot.edit_message_text(BOT_SENT_TO_STAFF.format(call.from_user.username),
+        bot.edit_message_text(BOT_SENT_TO_STAFF.format(call.from_user.first_name + ' ' + call.from_user.last_name,
+                                                       'tg://user?id=' + str(call.from_user.id)),
                               chat_id=call.message.chat.id,
-                              message_id=call.message.message_id)
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
 
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(kbrd_btn(text=BTN_ROADS_CLOSED,
@@ -331,14 +333,18 @@ def roads_callback(call):
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(kbrd_btn(text=BTN_ROADS_ACCEPT,
                               callback_data='road_mod_approve'))
-        msg = BOT_INVESTIGATING.format(call.from_user.username)
+        msg = BOT_INVESTIGATING.format(call.from_user.first_name + ' ' + call.from_user.last_name,
+                                       'tg://user?id=' + str(call.from_user.id))
         bot.edit_message_text(msg, chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
+                              parse_mode='markdown',
                               reply_markup=keyboard)
     elif call.data == 'road_mod_ban':
-        bot.edit_message_text(BOT_USER_BANNED.format(call.from_user.username),
+        bot.edit_message_text(BOT_USER_BANNED.format(call.from_user.first_name + ' ' + call.from_user.last_name,
+                                                     'tg://user?id=' + str(call.from_user.id)),
                               chat_id=call.message.chat.id,
-                              message_id=call.message.message_id)
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
         c.execute('''INSERT INTO banned VALUES
                      (SELECT username FROM roads
                       WHERE mods_message_id = %s)''',
@@ -347,9 +353,11 @@ def roads_callback(call):
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
             return
-        bot.edit_message_text(BOT_ROADBLOCK_SET.format(call.from_user.username),
+        bot.edit_message_text(BOT_ROADBLOCK_SET.format(call.from_user.first_name + ' ' + call.from_user.last_name,
+                                                       'tg://user?id=' + str(call.from_user.id)),
                               chat_id=call.message.chat.id,
-                              message_id=call.message.message_id)
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
         c.execute('''SELECT chat_id FROM roads
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
@@ -364,9 +372,11 @@ def roads_callback(call):
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
             return
-        bot.edit_message_text(BOT_ROADBLOCK_DEL.format(call.from_user.username),
+        bot.edit_message_text(BOT_ROADBLOCK_DEL.format(call.from_user.first_name + ' ' + call.from_user.last_name,
+                                                       'tg://user?id=' + str(call.from_user.id)),
                               chat_id=call.message.chat.id,
-                              message_id=call.message.message_id)
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
         c.execute('''SELECT chat_id FROM roads
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
@@ -381,9 +391,11 @@ def roads_callback(call):
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
             return
-        bot.edit_message_text(BOT_INFOPOINT_SET.format(call.from_user.username),
+        bot.edit_message_text(BOT_INFOPOINT_SET.format(call.from_user.first_name + ' ' + call.from_user.last_name,
+                                                       'tg://user?id=' + str(call.from_user.id)),
                               chat_id=call.message.chat.id,
-                              message_id=call.message.message_id)
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
         c.execute('''SELECT chat_id FROM roads
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
