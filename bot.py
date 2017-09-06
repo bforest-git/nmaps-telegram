@@ -1,7 +1,12 @@
-import logging, os, requests, psycopg2, telebot
-from telebot import types
-from phrases import *
+import logging
+import math
+import os
+import psycopg2
+import requests
+import telebot
 from bs4 import BeautifulSoup
+from phrases import *
+types = telebot.types
 
 
 class Prefix:
@@ -21,13 +26,13 @@ db_creds = {'host': os.getenv('DBHOST', 'localhost'),
             'user': os.getenv('DBUSER', 'ubuntu'),
             'password': os.getenv('DBPASS', 'bot')}
 
-nmaps_chat = os.getenv('NMAPSCHAT', '-1001136617457')
-mods_chat = os.getenv('MODSCHAT', '-240980847')
-roads_chat = os.getenv('ROADSCHAT', '-227479062')
+nmaps_chat = int(os.getenv('NMAPSCHAT', '-1001136617457'))
+mods_chat = int(os.getenv('MODSCHAT', '-240980847'))
+roads_chat = int(os.getenv('ROADSCHAT', '-227479062'))
 
-alexfox = '30375360'
+alexfox = 30375360
 
-staff = ['Borodin', 'Kalashnikov', 'expertSerg', 'Khudozhnikov', 'Soloviev', 'Kruzhalov']
+staff = ['Borodin', 'Kalashnikov', 'expertSerg', 'Khudozhnikov', 'Soloviev', 'Kruzhalov', 'Bagirov']
 
 kbrd_btn = types.InlineKeyboardButton
 
@@ -50,7 +55,6 @@ except psycopg2.IntegrityError:
 
 db.commit()
 c.close()
-db.close()
 
 
 def private_chat(message):
@@ -58,13 +62,15 @@ def private_chat(message):
 
 
 def is_admin(user):
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
     c.execute('''SELECT username FROM admins
                  WHERE username = %s''', (user,))
     is_adm = c.fetchone() is not None
-    db.close()
     return is_adm
+
+
+def full_name(user):
+    return user.first_name + ' ' + user.last_name
 
 
 @bot.message_handler(commands=['start', 'home'])
@@ -87,9 +93,9 @@ def home(message, user_override=None):
 @bot.message_handler(regexp=MENU_SETTINGS)
 def settings(message):
     keyboard = types.InlineKeyboardMarkup()
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
-    c.execute("SELECT value FROM settings WHERE option = 'roads_moderation'")
+    c.execute('''SELECT value FROM settings
+                 WHERE option = 'roads_moderation' ''')
 
     if c.fetchone()[0] == 'disabled':
         keyboard.row(kbrd_btn(text=PREF_MOD_ON,
@@ -107,7 +113,6 @@ def settings(message):
                      reply_markup=keyboard)
 
     c.close()
-    db.close()
 
 
 @bot.message_handler(regexp=MENU_LINKS)
@@ -229,28 +234,26 @@ def send_feedback(message):
 
 
 def add_admin(message):
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
     try:
-        c.execute('INSERT INTO admins VALUES (%s)', (message.text.strip('@'), ))
+        c.execute('''INSERT INTO admins VALUES (%s)''',
+                  (message.text.strip('@'), ))
     except psycopg2.IntegrityError:
         bot.send_message(message.chat.id, PREF_ALREADY_ADMIN_USR)
         home(message)
         return
     db.commit()
     c.close()
-    db.close()
     bot.send_message(message.chat.id, PREF_ADDED_ADMIN_USR)
     home(message, user_override=message.from_user.username)
 
 
 def del_admin(message):
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
-    c.execute('DELETE FROM admins WHERE username = %s', (message.text.strip('@'), ))
+    c.execute('''DELETE FROM admins WHERE username = %s''',
+              (message.text.strip('@'), ))
     db.commit()
     c.close()
-    db.close()
     bot.send_message(message.chat.id, PREF_DELED_ADMIN_USR)
     home(message, user_override=message.from_user.username)
 
@@ -259,16 +262,18 @@ def del_admin(message):
 def roads(message):
     if message.from_user.username == 'combot':
         bot.delete_message(message.chat.id, message.id)
-    if '#перекрытие' not in message.text.lower() or str(message.chat.id) == roads_chat or str(message.chat.id) == mods_chat:
+    if ('#перекрытие' not in message.text.lower() or
+        message.chat.id == roads_chat or
+        message.chat.id == mods_chat):
         return
 
     bot.send_message(message.chat.id,
                      BOT_MSG_ACCEPT.format(message.from_user.username))
 
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
 
-    c.execute("SELECT value FROM settings WHERE option = 'roads_moderation'")
+    c.execute('''SELECT value FROM settings
+                 WHERE option = 'roads_moderation' ''')
 
     if c.fetchone()[0] == 'disabled':
         keyboard = types.InlineKeyboardMarkup()
@@ -284,7 +289,9 @@ def roads(message):
                                          BOT_NEW_ROADBLOCK,
                                          reply_markup=keyboard)
         c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s, %s)''',
-                  (message.from_user.username, message.chat.id, message.message_id,
+                  (message.from_user.username,
+                   message.chat.id,
+                   message.message_id,
                    0, roads_message.message_id))
     else:
         keyboard = types.InlineKeyboardMarkup()
@@ -294,28 +301,33 @@ def roads(message):
                               callback_data='road_mod_request_info'))
         keyboard.row(kbrd_btn(text=BTN_ROADS_FRAUD,
                               callback_data='road_mod_ban'))
+        keyboard.row(kbrd_btn(text=BTN_CANCEL,
+                              callback_data='road_mod_cancel'))
 
         msg = BOT_REQUEST_CHECK.format(message.from_user.username)
         mods_message = bot.send_message(mods_chat, msg, reply_markup=keyboard)
         bot.forward_message(mods_chat, message.chat.id, message.message_id)
         c.execute('''INSERT INTO roads VALUES (%s, %s, %s, %s, %s)''',
-                  (message.from_user.username, message.chat.id, message.message_id,
+                  (message.from_user.username,
+                   message.chat.id,
+                   message.message_id,
                    mods_message.message_id, 0))
     db.commit()
-    db.close()
+    c.close()
 
 
 @bot.callback_query_handler(func=Prefix('road_'))
 def roads_callback(call):
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
 
     if call.data == 'road_mod_approve':
-        if 'Выясняет' in call.message.text and call.from_user.first_name + ' ' + call.from_user.last_name not in call.message.text:
+        if ('Выясняет' in call.message.text and
+            full_name(call.from_user) not in call.message.text):
             bot.answer_callback_query(call.id, text=BOT_UNDER_INVESTIGATION)
             return
-        bot.edit_message_text(BOT_SENT_TO_STAFF.format(call.from_user.first_name + ' ' + call.from_user.last_name,
-                                                       'tg://user?id=' + str(call.from_user.id)),
+        msg = BOT_SENT_TO_STAFF.format(full_name(call.from_user),
+                                       str(call.from_user.id))
+        bot.edit_message_text(msg,
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown')
@@ -348,28 +360,28 @@ def roads_callback(call):
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(kbrd_btn(text=BTN_ROADS_ACCEPT,
                               callback_data='road_mod_approve'))
-        msg = BOT_INVESTIGATING.format(call.from_user.first_name + ' ' + call.from_user.last_name,
-                                       'tg://user?id=' + str(call.from_user.id))
+        msg = BOT_INVESTIGATING.format(full_name(call.from_user),
+                                       str(call.from_user.id))
         bot.edit_message_text(msg, chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown',
                               reply_markup=keyboard)
     elif call.data == 'road_mod_ban':
-        bot.edit_message_text(BOT_USER_BANNED.format(call.from_user.first_name + ' ' + call.from_user.last_name,
-                                                     'tg://user?id=' + str(call.from_user.id)),
+        bot.edit_message_text(BOT_USER_BANNED.format(full_name(call.from_user),
+                                                     str(call.from_user.id)),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown')
         c.execute('''INSERT INTO banned VALUES
-                     (SELECT username FROM roads
-                      WHERE mods_message_id = %s)''',
+                     ((SELECT username FROM roads
+                       WHERE mods_message_id = %s))''',
                   (call.message.message_id,))
     elif call.data == 'road_closed':
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
             return
-        bot.edit_message_text(BOT_ROADBLOCK_SET.format(call.from_user.first_name + ' ' + call.from_user.last_name,
-                                                       'tg://user?id=' + str(call.from_user.id)),
+        bot.edit_message_text(BOT_ROADBLOCK_SET.format(full_name(call.from_user),
+                                                       str(call.from_user.id)),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown')
@@ -387,8 +399,8 @@ def roads_callback(call):
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
             return
-        bot.edit_message_text(BOT_ROADBLOCK_DEL.format(call.from_user.first_name + ' ' + call.from_user.last_name,
-                                                       'tg://user?id=' + str(call.from_user.id)),
+        bot.edit_message_text(BOT_ROADBLOCK_DEL.format(full_name(call.from_user),
+                                                       str(call.from_user.id)),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown')
@@ -406,8 +418,8 @@ def roads_callback(call):
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
             return
-        bot.edit_message_text(BOT_INFOPOINT_SET.format(call.from_user.first_name + ' ' + call.from_user.last_name,
-                                                       'tg://user?id=' + str(call.from_user.id)),
+        bot.edit_message_text(BOT_INFOPOINT_SET.format(full_name(call.from_user),
+                                                       str(call.from_user.id)),
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown')
@@ -423,18 +435,18 @@ def roads_callback(call):
                          reply_to_message_id=chat_message_id)
 
     db.commit()
-    db.close()
+    c.close()
 
 
 @bot.callback_query_handler(func=Prefix('prefs_'))
 def prefs_callback(call):
     keyboard = types.InlineKeyboardMarkup()
 
-    db = psycopg2.connect(**db_creds)
     c = db.cursor()
 
     if call.data == 'prefs_mod_on':
-        c.execute("UPDATE settings SET value = 'enabled' WHERE option = 'roads_moderation'")
+        c.execute('''UPDATE settings SET value = 'enabled'
+                     WHERE option = 'roads_moderation' ''')
         keyboard.row(kbrd_btn(text=PREF_MOD_OFF,
                               callback_data='prefs_mod_off'))
         keyboard.row(kbrd_btn(text=PREF_ADMINS,
@@ -445,7 +457,8 @@ def prefs_callback(call):
                               message_id=call.message.message_id,
                               reply_markup=keyboard)
     elif call.data == 'prefs_mod_off':
-        c.execute("UPDATE settings SET value = 'disabled' WHERE option = 'roads_moderation'")
+        c.execute('''UPDATE settings SET value = 'disabled'
+                     WHERE option = 'roads_moderation' ''')
         keyboard.row(kbrd_btn(text=PREF_MOD_ON,
                               callback_data='prefs_mod_on'))
         keyboard.row(kbrd_btn(text=PREF_ADMINS,
@@ -470,7 +483,6 @@ def prefs_callback(call):
 
     db.commit()
     c.close()
-    db.close()
 
 
 @bot.callback_query_handler(func=Prefix('admin_'))
@@ -485,7 +497,6 @@ def admin_callback(call):
         bot.register_next_step_handler(msg, del_admin)
     elif call.data == 'admin_list':
         msg = PREF_CURR_ADMINS + ':\n'
-        db = psycopg2.connect(**db_creds)
         c = db.cursor()
         c.execute('''SELECT username FROM admins''')
         for idx, user in enumerate(c.fetchall(), 1):
@@ -493,7 +504,11 @@ def admin_callback(call):
         bot.send_message(text=msg,
                          chat_id=call.message.chat.id)
         home(call.message, user_override=call.from_user.username)
+        c.close()
 
 
 if __name__ == '__main__':
-    bot.polling()
+    try:
+        bot.polling()
+    finally:
+        db.close()
