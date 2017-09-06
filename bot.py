@@ -13,9 +13,9 @@ class Prefix:
 
 
 bot = telebot.TeleBot(os.getenv('TLGAPIKEY', '331488080:AAH8PEA9WnsZtFubYnwFI5EWDq1fvqb9ZAE'))
-bot.bypass_moderators = False
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
+
 db_creds = {'host': os.getenv('DBHOST', 'localhost'),
             'dbname': os.getenv('DBNAME', 'bot'),
             'user': os.getenv('DBUSER', 'ubuntu'),
@@ -41,6 +41,12 @@ c.execute('''CREATE TABLE IF NOT EXISTS roads (username text,
 
 c.execute('''CREATE TABLE IF NOT EXISTS banned (username text primary key)''')
 c.execute('''CREATE TABLE IF NOT EXISTS admins (username text primary key)''')
+c.execute('''CREATE TABLE IF NOT EXISTS settings (option text unique, value text)''')
+
+try:
+    c.execute('INSERT INTO settings VALUES (%s, %s)', ('roads_moderation', 'enabled'))
+except psycopg2.IntegrityError:
+    pass
 
 db.commit()
 c.close()
@@ -81,7 +87,11 @@ def home(message, user_override=None):
 @bot.message_handler(regexp=MENU_SETTINGS)
 def settings(message):
     keyboard = types.InlineKeyboardMarkup()
-    if bot.bypass_moderators:
+    db = psycopg2.connect(**db_creds)
+    c = db.cursor()
+    c.execute("SELECT value FROM settings WHERE option = 'roads_moderation'")
+
+    if c.fetchone()[0] == 'disabled':
         keyboard.row(kbrd_btn(text=PREF_MOD_ON,
                               callback_data='prefs_mod_on'))
     else:
@@ -95,6 +105,9 @@ def settings(message):
     bot.send_message(message.chat.id,
                      PREF_DESC,
                      reply_markup=keyboard)
+
+    c.close()
+    db.close()
 
 
 @bot.message_handler(regexp=MENU_LINKS)
@@ -255,7 +268,9 @@ def roads(message):
     db = psycopg2.connect(**db_creds)
     c = db.cursor()
 
-    if bot.bypass_moderators:
+    c.execute("SELECT value FROM settings WHERE option = 'roads_moderation'")
+
+    if c.fetchone()[0] == 'disabled':
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(kbrd_btn(text=BTN_ROADS_CLOSED,
                               callback_data='road_closed'))
@@ -415,8 +430,11 @@ def roads_callback(call):
 def prefs_callback(call):
     keyboard = types.InlineKeyboardMarkup()
 
+    db = psycopg2.connect(**db_creds)
+    c = db.cursor()
+
     if call.data == 'prefs_mod_on':
-        bot.bypass_moderators = False
+        c.execute("UPDATE settings SET value = 'enabled' WHERE option = 'roads_moderation'")
         keyboard.row(kbrd_btn(text=PREF_MOD_OFF,
                               callback_data='prefs_mod_off'))
         keyboard.row(kbrd_btn(text=PREF_ADMINS,
@@ -427,7 +445,7 @@ def prefs_callback(call):
                               message_id=call.message.message_id,
                               reply_markup=keyboard)
     elif call.data == 'prefs_mod_off':
-        bot.bypass_moderators = True
+        c.execute("UPDATE settings SET value = 'disabled' WHERE option = 'roads_moderation'")
         keyboard.row(kbrd_btn(text=PREF_MOD_ON,
                               callback_data='prefs_mod_on'))
         keyboard.row(kbrd_btn(text=PREF_ADMINS,
@@ -449,6 +467,10 @@ def prefs_callback(call):
                          reply_markup=keyboard)
     elif call.data == 'prefs_return':
         home(call.message, user_override=call.from_user.username)
+
+    db.commit()
+    c.close()
+    db.close()
 
 
 @bot.callback_query_handler(func=Prefix('admin_'))
