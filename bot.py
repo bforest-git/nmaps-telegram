@@ -267,6 +267,12 @@ def roads(message):
         message.chat.id == mods_chat):
         return
 
+    c = db.cursor()
+    c.execute('SELECT * FROM banned WHERE username = %s', (message.from_user.username,))
+
+    if c.fetchone() is not None:
+        return
+
     bot.send_message(message.chat.id,
                      BOT_MSG_ACCEPT.format(message.from_user.username))
 
@@ -372,10 +378,13 @@ def roads_callback(call):
                               chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
                               parse_mode='markdown')
-        c.execute('''INSERT INTO banned VALUES
-                     ((SELECT username FROM roads
-                       WHERE mods_message_id = %s))''',
-                  (call.message.message_id,))
+        try:
+            c.execute('''INSERT INTO banned VALUES
+                      ((SELECT username FROM roads
+                      WHERE mods_message_id = %s))''',
+                      (call.message.message_id,))
+        except psycopg2.IntegrityError:
+            pass
     elif call.data == 'road_closed':
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
