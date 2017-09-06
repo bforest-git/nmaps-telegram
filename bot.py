@@ -32,7 +32,7 @@ roads_chat = int(os.getenv('ROADSCHAT', '-227479062'))
 
 alexfox = 30375360
 
-staff = ['Borodin', 'Kalashnikov', 'expertSerg', 'Khudozhnikov', 'Soloviev', 'Kruzhalov', 'Bagirov']
+staff = ['Borodin', 'Kalashnikov', 'expertSerg', 'Khudozhnikov', 'Soloviev', 'Kruzhalov']
 
 kbrd_btn = types.InlineKeyboardButton
 
@@ -289,6 +289,8 @@ def roads(message):
                               callback_data='road_opened'))
         keyboard.row(kbrd_btn(text=BTN_ROADS_INFOPOINT,
                               callback_data='road_info_added'))
+        keyboard.row(kbrd_btn(text=BTN_CANCEL,
+                              callback_data='road_cancel'))
 
         bot.forward_message(roads_chat, message.chat.id, message.message_id)
         roads_message = bot.send_message(roads_chat,
@@ -345,6 +347,8 @@ def roads_callback(call):
                               callback_data='road_opened'))
         keyboard.row(kbrd_btn(text=BTN_ROADS_INFOPOINT,
                               callback_data='road_info_added'))
+        keyboard.row(kbrd_btn(text=BTN_CANCEL,
+                              callback_data='road_cancel'))
 
         c.execute('''SELECT chat_id FROM roads
                      WHERE mods_message_id = %s''',
@@ -441,6 +445,41 @@ def roads_callback(call):
                   (call.message.message_id,))
         chat_message_id = c.fetchone()[0]
         bot.send_message(chat_id, BOT_INFOPOINT_SET_USR,
+                         reply_to_message_id=chat_message_id)
+    elif call.data == 'road_mod_cancel':
+        bot.edit_message_text(BOT_REQUEST_CANCELLED.format(full_name(call.from_user),
+                                                           str(call.from_user.id)),
+                              chat_id=call.message.chat.id,
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE mods_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
+        c.execute('''SELECT chat_message_id FROM roads
+                     WHERE mods_message_id = %s''',
+                  (call.message.message_id,))
+        chat_message_id = c.fetchone()[0]
+        bot.send_message(chat_id, BOT_REQUEST_CANCELLED_USR,
+                         reply_to_message_id=chat_message_id)
+    elif call.data == 'road_cancel':
+        if call.from_user.last_name not in staff:
+            bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
+            return
+        bot.edit_message_text(BOT_REQUEST_CANCELLED.format(full_name(call.from_user),
+                                                           str(call.from_user.id)),
+                              chat_id=call.message.chat.id,
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE roads_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
+        c.execute('''SELECT chat_message_id FROM roads
+                     WHERE roads_message_id = %s''',
+                  (call.message.message_id,))
+        chat_message_id = c.fetchone()[0]
+        bot.send_message(chat_id, BOT_REQUEST_CANCELLED_USR,
                          reply_to_message_id=chat_message_id)
 
     db.commit()
