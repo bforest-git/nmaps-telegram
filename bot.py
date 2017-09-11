@@ -2,11 +2,14 @@ import logging
 import math
 import os
 import psycopg2
+import re
 import requests
 import telebot
 from bs4 import BeautifulSoup
-from phrases import *
 types = telebot.types
+
+from capturer import Capturer
+from phrases import *
 
 
 class Prefix:
@@ -56,10 +59,11 @@ except psycopg2.IntegrityError:
 db.commit()
 c.close()
 
+cpt = Capturer()
+
 
 def private_chat(message):
     return message.chat.type == 'private'
-
 
 def is_admin(user):
     c = db.cursor()
@@ -67,7 +71,6 @@ def is_admin(user):
                  WHERE username = %s''', (user,))
     is_adm = c.fetchone() is not None
     return is_adm
-
 
 def full_name(user):
     return user.first_name + ' ' + user.last_name
@@ -105,6 +108,8 @@ def settings(message):
                               callback_data='prefs_mod_off'))
     keyboard.row(kbrd_btn(text=PREF_ADMINS,
                           callback_data='prefs_admins'))
+    keyboard.row(kbrd_btn(text=MENU_UNBAN,
+                          callback_data='unbanpage_0'))
     keyboard.row(kbrd_btn(text=MENU_RETURN,
                           callback_data='prefs_return'))
 
@@ -225,7 +230,6 @@ def feedback(message):
     bot.send_message(message.chat.id, BOT_SEND_FEEDBACK_USR, reply_markup=keyboard)
     bot.register_next_step_handler(message, send_feedback)
 
-
 def send_feedback(message):
     if message.text != MENU_RETURN:
         bot.send_message(alexfox, message.text)
@@ -257,14 +261,31 @@ def del_admin(message):
     bot.send_message(message.chat.id, PREF_DELED_ADMIN_USR)
     home(message, user_override=message.from_user.username)
 
-
+hashtags = re.compile('#({}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK),
+                      flags=re.I | re.U)
 @bot.message_handler(content_types=['text'])
 def roads(message):
     if message.from_user.username == 'combot':
         bot.delete_message(message.chat.id, message.id)
-    if ('#перекрытие' not in message.text.lower() or
-        message.chat.id == roads_chat or
-        message.chat.id == mods_chat):
+
+    tag = hashtags.search(message.text)
+    if tag is None:
+        return
+
+    if tag.group(1).lower() == HASH_SCREEN:
+        url = None
+        for i in message.text.split():
+            if i.startswith('http'):
+                url = i
+                break
+        if url is not None:
+            cpt.take_screenshot(url)
+            with open(cpt.default, 'rb') as f:
+                bot.send_photo(photo=f,
+                               chat_id=message.chat.id)
+        return
+
+    if message.chat.id in (roads_chat, mods_chat):
         return
 
     c = db.cursor()
@@ -321,6 +342,52 @@ def roads(message):
                    message.message_id,
                    mods_message.message_id, 0))
     db.commit()
+    c.close()
+
+@bot.callback_query_handler(func=Prefix('unban_'))
+def unban_callback(call):
+    user = call.data[len('unban_'):]
+    c = db.cursor()
+    c.execute('''DELETE FROM banned
+                 WHERE username = %s''', (user,))
+    bot.send_message(text=BOT_USER_UNBANNED.format(user),
+                     chat_id=call.message.chat.id)
+
+items_per_page = 3
+@bot.callback_query_handler(func=Prefix('unbanpage_'))
+def unban_pagination(call):
+    items = int(call.data[len('unbanpage_'):])
+    keyboard = types.InlineKeyboardMarkup()
+    c = db.cursor()
+    c.execute('''SELECT * FROM banned
+                 LIMIT %s OFFSET %s''', (items_per_page, items))
+    banned = c.fetchall()
+    c.execute('''SELECT COUNT(*) FROM banned''')
+    row_amt = c.fetchone()[0]
+    for user in banned:
+        keyboard.row(kbrd_btn(text=user[0],
+                              callback_data='unban_' + user[0]))
+
+    page_ctrl = []
+    if items:
+        page_ctrl.append(kbrd_btn(text=BTN_PREV_PAGE,
+                                  callback_data='unbanpage_' +
+                                                str(items - items_per_page)))
+    if row_amt > items + items_per_page:
+        page_ctrl.append(kbrd_btn(text=BTN_NEXT_PAGE,
+                                  callback_data='unbanpage_' +
+                                                str(items + items_per_page)))
+    keyboard.row(*page_ctrl)
+    keyboard.row(kbrd_btn(text=MENU_RETURN,
+                          callback_data='prefs_return'))
+
+    curr_page = items // items_per_page + 1
+    all_pages = math.ceil(row_amt / items_per_page)
+    bot.edit_message_text(BOT_CHOOSE_TO_UNBAN.format(curr_page, all_pages)
+                          if row_amt else BOT_NO_BANNED,
+                          chat_id=call.message.chat.id,
+                          message_id=call.message.message_id,
+                          reply_markup=keyboard)
     c.close()
 
 
@@ -384,8 +451,8 @@ def roads_callback(call):
                               parse_mode='markdown')
         try:
             c.execute('''INSERT INTO banned VALUES
-                      ((SELECT username FROM roads
-                      WHERE mods_message_id = %s))''',
+                         ((SELECT username FROM roads
+                           WHERE mods_message_id = %s))''',
                       (call.message.message_id,))
         except psycopg2.IntegrityError:
             pass
@@ -560,3 +627,4 @@ if __name__ == '__main__':
         bot.polling()
     finally:
         db.close()
+
