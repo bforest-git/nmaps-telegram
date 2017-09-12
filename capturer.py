@@ -1,7 +1,10 @@
+from io import BytesIO
 from time import sleep
 from urllib.parse import urlsplit
 from selenium import webdriver, common
 
+class IllegalURL(Exception):
+    pass
 
 class Capturer:
     chrome = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) '
@@ -15,7 +18,6 @@ class Capturer:
                     ".style.display = 'none';")
     hide_ad_info = ("document.querySelector('.sidebar-panel-view')"
                     ".style.display = 'none';")
-    default = 'scrn.png'
 
     def __init__(self):
         self.drv = webdriver.PhantomJS('./phantomjs')
@@ -24,14 +26,21 @@ class Capturer:
 
     @staticmethod
     def is_nmaps(url):
-        return urlsplit(url).netloc.startswith('n.maps')
+        spl = urlsplit(url)
+        if spl.netloc == 'n.maps.yandex.ru':
+            return True
+        elif spl.netloc == 'yandex.ru' and spl.path.startswith('/maps'):
+            return False
+        raise IllegalURL
 
-    def take_screenshot(self, url, filename=default):
+    def take_screenshot(self, url):
+        nmaps = self.is_nmaps(url)
+
         self.drv.get(url)
         self.drv.refresh()
         sleep(3)
 
-        if self.is_nmaps(url):
+        if nmaps:
             sleep(3.5)
             try:
                 start_view = self.drv.find_element_by_class_name(self.nmaps_modal_cls)
@@ -46,23 +55,7 @@ class Capturer:
                 self.drv.execute_script(self.hide_ad_info)
             except common.exceptions.WebDriverException as e:
                 print(e)
-        self.drv.save_screenshot(filename)
+        return BytesIO(self.drv.get_screenshot_as_png())
 
     def __del__(self):
         self.drv.quit()
-
-    def emergency(self):
-        self.drv.save_screenshot('error.png')
-
-
-if __name__ == '__main__':
-    cpt = Capturer()
-    for idx, url in enumerate(['https://n.maps.yandex.ru/#!/?z=19&ll=74.607714%2C42.876470&l=nk%23sat',
-                               'https://n.maps.yandex.ru/-/CBUfr0Bt~C',
-                               'https://yandex.ru/maps/54/yekaterinburg/?ll=60.640533%2C56.810370&z=12',
-                               'https://yandex.ru/maps/-/CBUfr0rbGB']):
-        try:
-            cpt.take_screenshot(url, 'test{}.png'.format(idx))
-        except:
-            cpt.emergency()
-            break

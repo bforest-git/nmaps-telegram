@@ -8,7 +8,7 @@ import telebot
 from bs4 import BeautifulSoup
 types = telebot.types
 
-from capturer import Capturer
+from capturer import Capturer, IllegalURL
 from phrases import *
 
 
@@ -279,10 +279,13 @@ def roads(message):
                 url = i
                 break
         if url is not None:
-            cpt.take_screenshot(url)
-            with open(cpt.default, 'rb') as f:
-                bot.send_photo(photo=f,
+            try:
+                scrn = cpt.take_screenshot(url)
+                bot.send_photo(photo=scrn,
                                chat_id=message.chat.id)
+            except IllegalURL:
+                bot.send_message(message.chat.id,
+                                 text=BOT_ILLEGAL_URL)
         return
 
     if message.chat.id in (roads_chat, mods_chat):
