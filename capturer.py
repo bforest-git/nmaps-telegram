@@ -1,4 +1,5 @@
 from io import BytesIO
+from threading import Lock
 from time import sleep
 from urllib.parse import urlsplit
 from selenium import webdriver, common
@@ -24,6 +25,8 @@ class Capturer:
         self.drv.set_window_size(1024, 800)
         self.drv.implicitly_wait(5)
 
+        self.lock = Lock()
+
     @staticmethod
     def is_nmaps(url):
         spl = urlsplit(url)
@@ -34,27 +37,27 @@ class Capturer:
         raise IllegalURL
 
     def take_screenshot(self, url):
-        nmaps = self.is_nmaps(url)
+        self.lock.acquire()
+        try:
+            nmaps = self.is_nmaps(url)
 
-        self.drv.get(url)
-        self.drv.refresh()
-        sleep(3)
+            self.drv.get(url)
+            self.drv.refresh()
+            sleep(3)
 
-        if nmaps:
-            sleep(3.5)
-            try:
+            if nmaps:
+                sleep(3.5)
                 start_view = self.drv.find_element_by_class_name(self.nmaps_modal_cls)
                 if start_view.is_displayed():
                     start_view.find_element_by_tag_name('button').click()
 
                 self.drv.execute_script(self.hide_sidebar)
-            except common.exceptions.WebDriverException as e:
-                print(e)
-        else:
-            try:
+            else:
                 self.drv.execute_script(self.hide_ad_info)
-            except common.exceptions.WebDriverException as e:
-                print(e)
+        except common.exceptions.WebDriverException as e:
+            print(e)
+        finally:
+            self.lock.release()
         return BytesIO(self.drv.get_screenshot_as_png())
 
     def __del__(self):
