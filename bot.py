@@ -50,6 +50,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS roads (username text,
 c.execute('''CREATE TABLE IF NOT EXISTS banned (username text primary key)''')
 c.execute('''CREATE TABLE IF NOT EXISTS admins (username text primary key)''')
 c.execute('''CREATE TABLE IF NOT EXISTS settings (option text unique, value text)''')
+c.execute('''CREATE TABLE IF NOT EXISTS subscribers (tlg_id bigint primary key, is_subscribed integer)''')
 
 try:
     c.execute('INSERT INTO settings VALUES (%s, %s)', ('roads_moderation', 'enabled'))
@@ -72,6 +73,19 @@ def is_admin(user):
     is_adm = c.fetchone() is not None
     return is_adm
 
+def subscribed(telegram_id):
+    c = db.cursor()
+    c.execute('''SELECT is_subscribed FROM subscribers
+                 WHERE tlg_id = %s''', (telegram_id,))
+    is_subscribed = c.fetchone()
+    if is_subscribed is None:
+        try:
+            c.execute('''INSERT INTO subscribers VALUES (%s, %s)''', (telegram_id, '0'))
+            db.commit()
+        except psycopg2.IntegrityError:
+            pass
+    return is_subscribed is not None and is_subscribed[0] == 1
+
 def full_name(user):
     return user.first_name + ' ' + user.last_name
 
@@ -80,11 +94,16 @@ def full_name(user):
 def home(message, user_override=None):
     if not private_chat(message):
         return
+
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,
                                          one_time_keyboard=True)
     keyboard.row(MENU_LINKS)
     keyboard.row(MENU_SEARCH_CLUB, MENU_SEARCH_RULES)
     keyboard.row(MENU_ROADS, MENU_FEEDBACK)
+    if subscribed(message.from_user.id):
+        keyboard.row(MENU_UNSUBSCRIBE)
+    else:
+        keyboard.row(MENU_SUBSCRIBE)
     if is_admin(user_override or message.from_user.username):
         keyboard.row(MENU_FAQ, MENU_SUPPORT)
         keyboard.row(MENU_SETTINGS)
@@ -108,6 +127,8 @@ def settings(message):
                               callback_data='prefs_mod_off'))
     keyboard.row(kbrd_btn(text=PREF_ADMINS,
                           callback_data='prefs_admins'))
+    keyboard.row(kbrd_btn(text=MENU_SEND_NOTIFICATION,
+                          callback_data='subscription_sticker'))
     keyboard.row(kbrd_btn(text=MENU_UNBAN,
                           callback_data='unbanpage_0'))
     keyboard.row(kbrd_btn(text=MENU_RETURN,
@@ -234,6 +255,24 @@ def send_feedback(message):
     if message.text != MENU_RETURN:
         bot.send_message(alexfox, message.text)
         bot.send_message(message.chat.id, BOT_FEEDBACK_SENT_USR)
+    home(message)
+
+
+@bot.message_handler(regexp=MENU_SUBSCRIBE)
+def subscribe(message):
+    c = db.cursor()
+    c.execute('''UPDATE subscribers SET is_subscribed = 1 WHERE tlg_id = %s''', (message.from_user.id,))
+    db.commit()
+    bot.send_message(message.chat.id, BOT_SUBSCRIBED_USR)
+    home(message)
+
+
+@bot.message_handler(regexp=MENU_UNSUBSCRIBE)
+def unsubscribe(message):
+    c = db.cursor()
+    c.execute('''UPDATE subscribers SET is_subscribed = 0 WHERE tlg_id = %s''', (message.from_user.id,))
+    db.commit()
+    bot.send_message(message.chat.id, BOT_UNSUBSCRIBED_USR)
     home(message)
 
 
