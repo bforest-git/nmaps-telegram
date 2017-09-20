@@ -66,12 +66,14 @@ cpt = Capturer()
 def private_chat(message):
     return message.chat.type == 'private'
 
+
 def is_admin(user):
     c = db.cursor()
     c.execute('''SELECT username FROM admins
                  WHERE username = %s''', (user,))
     is_adm = c.fetchone() is not None
     return is_adm
+
 
 def subscribed(telegram_id):
     c = db.cursor()
@@ -85,6 +87,7 @@ def subscribed(telegram_id):
         except psycopg2.IntegrityError:
             pass
     return is_subscribed is not None and is_subscribed[0] == 1
+
 
 def full_name(user):
     return user.first_name + ' ' + user.last_name
@@ -127,8 +130,6 @@ def settings(message):
                               callback_data='prefs_mod_off'))
     keyboard.row(kbrd_btn(text=PREF_ADMINS,
                           callback_data='prefs_admins'))
-    keyboard.row(kbrd_btn(text=MENU_SEND_NOTIFICATION,
-                          callback_data='subscription_sticker'))
     keyboard.row(kbrd_btn(text=MENU_UNBAN,
                           callback_data='unbanpage_0'))
     keyboard.row(kbrd_btn(text=MENU_RETURN,
@@ -251,6 +252,7 @@ def feedback(message):
     bot.send_message(message.chat.id, BOT_SEND_FEEDBACK_USR, reply_markup=keyboard)
     bot.register_next_step_handler(message, send_feedback)
 
+
 def send_feedback(message):
     if message.text != MENU_RETURN:
         bot.send_message(alexfox, message.text)
@@ -300,8 +302,11 @@ def del_admin(message):
     bot.send_message(message.chat.id, PREF_DELED_ADMIN_USR)
     home(message, user_override=message.from_user.username)
 
+
 hashtags = re.compile('#({}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK),
                       flags=re.I | re.U)
+
+
 @bot.message_handler(content_types=['text'])
 def roads(message):
     if message.from_user.username == 'combot':
@@ -386,6 +391,7 @@ def roads(message):
     db.commit()
     c.close()
 
+
 @bot.callback_query_handler(func=Prefix('unban_'))
 def unban_callback(call):
     user = call.data[len('unban_'):]
@@ -395,7 +401,10 @@ def unban_callback(call):
     bot.send_message(text=BOT_USER_UNBANNED.format(user),
                      chat_id=call.message.chat.id)
 
+
 items_per_page = 3
+
+
 @bot.callback_query_handler(func=Prefix('unbanpage_'))
 def unban_pagination(call):
     items = int(call.data[len('unbanpage_'):])
@@ -479,6 +488,8 @@ def roads_callback(call):
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(kbrd_btn(text=BTN_ROADS_ACCEPT,
                               callback_data='road_mod_approve'))
+        keyboard.row(kbrd_btn(text=BTN_CANCEL,
+                              callback_data='road_mod_cancel'))
         msg = BOT_INVESTIGATING.format(full_name(call.from_user),
                                        str(call.from_user.id))
         bot.edit_message_text(msg, chat_id=call.message.chat.id,
@@ -588,6 +599,29 @@ def roads_callback(call):
                      WHERE roads_message_id = %s''',
                   (call.message.message_id,))
         chat_message_id = c.fetchone()[0]
+        bot.send_message(chat_id, BOT_REQUEST_CANCELLED_USR,
+                         reply_to_message_id=chat_message_id)
+    elif call.data == 'road_mod_cancel':
+        if ('Выясняет' in call.message.text and
+            full_name(call.from_user) not in call.message.text):
+            bot.answer_callback_query(call.id, text=BOT_UNDER_INVESTIGATION)
+            return
+        msg = BOT_REQUEST_CANCELLED.format(full_name(call.from_user),
+                                           str(call.from_user.id))
+        bot.edit_message_text(msg,
+                              chat_id=call.message.chat.id,
+                              message_id=call.message.message_id,
+                              parse_mode='markdown')
+
+        c.execute('''SELECT chat_id FROM roads
+                     WHERE mods_message_id = %s''',
+                  (call.message.message_id,))
+        chat_id = c.fetchone()[0]
+        c.execute('''SELECT chat_message_id FROM roads
+                     WHERE mods_message_id = %s''',
+                  (call.message.message_id,))
+        chat_message_id = c.fetchone()[0]
+
         bot.send_message(chat_id, BOT_REQUEST_CANCELLED_USR,
                          reply_to_message_id=chat_message_id)
 
