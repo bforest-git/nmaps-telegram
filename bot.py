@@ -566,22 +566,6 @@ def roads_callback(call):
         chat_message_id = c.fetchone()[0]
         bot.send_message(chat_id, BOT_INFOPOINT_SET_USR,
                          reply_to_message_id=chat_message_id)
-    elif call.data == 'road_mod_cancel':
-        bot.edit_message_text(BOT_REQUEST_CANCELLED.format(full_name(call.from_user),
-                                                           str(call.from_user.id)),
-                              chat_id=call.message.chat.id,
-                              message_id=call.message.message_id,
-                              parse_mode='markdown')
-        c.execute('''SELECT chat_id FROM roads
-                     WHERE mods_message_id = %s''',
-                  (call.message.message_id,))
-        chat_id = c.fetchone()[0]
-        c.execute('''SELECT chat_message_id FROM roads
-                     WHERE mods_message_id = %s''',
-                  (call.message.message_id,))
-        chat_message_id = c.fetchone()[0]
-        bot.send_message(chat_id, BOT_REQUEST_CANCELLED_USR,
-                         reply_to_message_id=chat_message_id)
     elif call.data == 'road_cancel':
         if call.from_user.last_name not in staff:
             bot.answer_callback_query(call.id, text=BOT_NOT_ROAD_STAFF)
