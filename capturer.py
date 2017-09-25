@@ -14,7 +14,8 @@ class Capturer:
         'phantomjs.page.customHeaders.User-Agent'
     ] = chrome
 
-    nmaps_modal_cls = 'nk-welcome-screen-view__start'
+    hide_modal = ("document.querySelector('.nk-welcome-screen-view')"
+                  ".style.display = 'none';")
     hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
                     ".style.display = 'none';")
     hide_ad_info = ("document.querySelector('.sidebar-panel-view')"
@@ -47,10 +48,7 @@ class Capturer:
 
             if nmaps:
                 sleep(3.5)
-                start_view = self.drv.find_element_by_class_name(self.nmaps_modal_cls)
-                if start_view.is_displayed():
-                    start_view.find_element_by_tag_name('button').click()
-
+                self.drv.execute_script(self.hide_modal)
                 self.drv.execute_script(self.hide_sidebar)
             else:
                 self.drv.execute_script(self.hide_ad_info)
