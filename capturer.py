@@ -14,8 +14,6 @@ class Capturer:
         'phantomjs.page.customHeaders.User-Agent'
     ] = chrome
 
-    hide_modal = ("document.querySelector('.nk-welcome-screen-view')"
-                  ".style.display = 'none';")
     hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
                     ".style.display = 'none';")
     hide_ad_info = ("document.querySelector('.sidebar-panel-view')"
@@ -23,7 +21,7 @@ class Capturer:
 
     def __init__(self):
         self.drv = webdriver.PhantomJS('./phantomjs')
-        self.drv.set_window_size(1024, 800)
+        self.drv.set_window_size(1280, 1024)
         self.drv.implicitly_wait(5)
 
         self.lock = Lock()
@@ -48,7 +46,6 @@ class Capturer:
 
             if nmaps:
                 sleep(3.5)
-                self.drv.execute_script(self.hide_modal)
                 self.drv.execute_script(self.hide_sidebar)
             else:
                 self.drv.execute_script(self.hide_ad_info)
