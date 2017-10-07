@@ -212,19 +212,18 @@ def search_rules(message):
     if message.text == MENU_RETURN:
         home(message)
         return
-    page = requests.get('https://yandex.ru/support/search-results/?text=' +
-                        message.text.replace(' ', '+') +
-                        '&service=nmaps-guide')
+    page = requests.get('https://yandex.ru/support/search-results/?service=nmaps&query=' +
+                        message.text.replace(' ', '+'))
     soup = BeautifulSoup(page.text, 'lxml')
     answer = ''
-    for item in soup.find_all('a', class_='serp__item'):
-        if '...' in item.find_all('div')[0].text:
-            title = item.find_all('div')[0].text.split('...')[0]
-        else:
-            title = item.find_all('div')[0].text.split('—')[0]
-        excerpt = item.find_all('div')[1].text
-        link = 'https://yandex.ru' + item['href']
-        answer += '[' + title + '](' + link + '): ' + excerpt + '\n'
+    for item in soup.find_all('div', class_='results__item'):
+        if item.find_all('div')[1].text != 'Народная карта':
+            continue
+        title = item.find('div').text.replace('&nbsp;', ' ')
+        link = 'https://yandex.ru/support/' + item.attrs['data-document']
+        text = item.find_all('div')[2].text
+        answer += '[' + title + '](' + link + ')\n'
+        answer += '```' + text + '```\n'
         answer += '____________________\n'
     if not answer:
         bot.send_message(message.chat.id, BOT_NOT_FOUND)
