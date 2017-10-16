@@ -302,7 +302,7 @@ def del_admin(message):
     home(message, user_override=message.from_user.username)
 
 
-hashtags = re.compile('#({}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK),
+hashtags = re.compile('#({}|{}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK, HASH_SCREEN_ENG),
                       flags=re.I | re.U)
 
 
@@ -315,7 +315,7 @@ def roads(message):
     if tag is None:
         return
 
-    if tag.group(1).lower() == HASH_SCREEN:
+    if tag.group(1).lower() in [HASH_SCREEN, HASH_SCREEN_ENG]:
         url = None
         for i in message.text.split():
             if i.startswith('http'):

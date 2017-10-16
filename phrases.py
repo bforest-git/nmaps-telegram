@@ -1,4 +1,5 @@
 HASH_SCREEN = 'скрин'
+HASH_SCREEN_ENG = 'screen'
 HASH_ROADBLOCK = 'перекрытие'
 
 BOT_ACTION_SELECT = 'Пожалуйста, выберите действие.'
