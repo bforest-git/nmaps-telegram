@@ -308,9 +308,9 @@ hashtags = re.compile('#({}|{}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK, HASH_SCR
 
 @bot.message_handler(content_types=['text', 'photo'])
 def roads(message):
-    if (message.text is not None):
+    if message.text is not None:
         tag = hashtags.search(message.text)
-        if tag is None or (message.content_type == 'photo' and message.caption != HASH_ROADBLOCK):
+        if tag is None:
             return
 
         if tag.group(1).lower() in [HASH_SCREEN, HASH_SCREEN_ENG]:
@@ -328,6 +328,11 @@ def roads(message):
                     bot.send_message(message.chat.id,
                                      text=BOT_ILLEGAL_URL)
             return
+
+    if message.content_type == 'photo' and message.caption is None:
+        return
+    if message.content_type == 'photo' and message.caption.lower()[1:] != HASH_ROADBLOCK:
+        return
 
     if message.chat.id in (roads_chat, mods_chat):
         return
