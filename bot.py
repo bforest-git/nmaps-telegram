@@ -308,9 +308,6 @@ hashtags = re.compile('#({}|{}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK, HASH_SCR
 
 @bot.message_handler(content_types=['text', 'photo'])
 def roads(message):
-    if message.from_user.username == 'combot':
-        bot.delete_message(message.chat.id, message.id)
-
     if (message.text is not None):
         tag = hashtags.search(message.text)
         if tag is None or (message.content_type == 'photo' and message.caption != HASH_ROADBLOCK):
