@@ -302,34 +302,35 @@ def del_admin(message):
     home(message, user_override=message.from_user.username)
 
 
-hashtags = re.compile('#({}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK),
+hashtags = re.compile('#({}|{}|{})'.format(HASH_SCREEN, HASH_ROADBLOCK, HASH_SCREEN_ENG),
                       flags=re.I | re.U)
 
 
-@bot.message_handler(content_types=['text'])
+@bot.message_handler(content_types=['text', 'photo'])
 def roads(message):
     if message.from_user.username == 'combot':
         bot.delete_message(message.chat.id, message.id)
 
-    tag = hashtags.search(message.text)
-    if tag is None:
-        return
+    if (message.text is not None):
+        tag = hashtags.search(message.text)
+        if tag is None or (message.content_type == 'photo' and message.caption != HASH_ROADBLOCK):
+            return
 
-    if tag.group(1).lower() == HASH_SCREEN:
-        url = None
-        for i in message.text.split():
-            if i.startswith('http'):
-                url = i
-                break
-        if url is not None:
-            try:
-                scrn = cpt.take_screenshot(url)
-                bot.send_photo(photo=scrn,
-                               chat_id=message.chat.id)
-            except IllegalURL:
-                bot.send_message(message.chat.id,
-                                 text=BOT_ILLEGAL_URL)
-        return
+        if tag.group(1).lower() in [HASH_SCREEN, HASH_SCREEN_ENG]:
+            url = None
+            for i in message.text.split():
+                if i.startswith('http'):
+                    url = i
+                    break
+            if url is not None:
+                try:
+                    scrn = cpt.take_screenshot(url)
+                    bot.send_photo(photo=scrn,
+                                   chat_id=message.chat.id)
+                except IllegalURL:
+                    bot.send_message(message.chat.id,
+                                     text=BOT_ILLEGAL_URL)
+            return
 
     if message.chat.id in (roads_chat, mods_chat):
         return
