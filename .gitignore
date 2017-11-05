@@ -103,3 +103,6 @@ ENV/
 
 # Images
 *.png
+
+# VS Code config
+.vscode
