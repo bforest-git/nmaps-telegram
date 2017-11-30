@@ -106,3 +106,5 @@ ENV/
 
 # VS Code config
 .vscode
+# PyCharm config
+.idea/

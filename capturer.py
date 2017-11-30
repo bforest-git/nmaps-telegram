@@ -4,8 +4,10 @@ from time import sleep
 from urllib.parse import urlsplit
 from selenium import webdriver, common
 
+
 class IllegalURL(Exception):
     pass
+
 
 class Capturer:
     chrome = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) '
@@ -15,8 +17,6 @@ class Capturer:
     ] = chrome
 
     hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
-                    ".style.display = 'none';")
-    hide_ad_info = ("document.querySelector('.sidebar-panel-view')"
                     ".style.display = 'none';")
 
     def __init__(self):
@@ -29,7 +29,7 @@ class Capturer:
     @staticmethod
     def is_nmaps(url):
         spl = urlsplit(url)
-        if spl.netloc == 'n.maps.yandex.ru':
+        if spl.netloc == 'n.maps.yandex.ru' or spl.netloc == 'mapmaker.yandex.com':
             return True
         elif spl.netloc == 'yandex.ru' and spl.path.startswith('/maps'):
             return False
@@ -45,10 +45,9 @@ class Capturer:
             sleep(3)
 
             if nmaps:
-                sleep(3.5)
                 self.drv.execute_script(self.hide_sidebar)
-            else:
-                self.drv.execute_script(self.hide_ad_info)
+
+            sleep(6)
         except common.exceptions.WebDriverException as e:
             print(e)
         finally:
