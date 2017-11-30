@@ -2,7 +2,10 @@ from io import BytesIO
 from threading import Lock
 from time import sleep
 from urllib.parse import urlsplit
-from selenium import webdriver, common
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import WebDriverException
+import os
 
 
 class IllegalURL(Exception):
@@ -10,17 +13,19 @@ class IllegalURL(Exception):
 
 
 class Capturer:
-    chrome = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) '
-              'Gecko/20100101 Firefox/55.0')
-    webdriver.DesiredCapabilities.PHANTOMJS[
-        'phantomjs.page.customHeaders.User-Agent'
-    ] = chrome
-
     hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
                     ".style.display = 'none';")
 
     def __init__(self):
-        self.drv = webdriver.PhantomJS('./phantomjs')
+        chrome_options = Options()
+        chrome_options.binary_location = os.getenv('GOOGLE_CHROME_BIN', '')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--headless')
+
+        self.drv = webdriver.Chrome(executable_path=os.getenv('GOOGLE_CHROME_DRIVER', ''),
+                                    chrome_options=chrome_options)
+
         self.drv.set_window_size(1280, 1024)
         self.drv.implicitly_wait(5)
 
@@ -47,8 +52,8 @@ class Capturer:
             if nmaps:
                 self.drv.execute_script(self.hide_sidebar)
 
-            sleep(6)
-        except common.exceptions.WebDriverException as e:
+            sleep(3)
+        except WebDriverException as e:
             print(e)
         finally:
             self.lock.release()
