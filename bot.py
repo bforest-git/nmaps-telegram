@@ -80,6 +80,7 @@ def screenshot(bot, update):
             url_end = url_start + int(entity['length'])
             try:
                 scrn = cpt.take_screenshot(update.message.text[url_start:url_end])
+                cpt.reboot()
                 scrn_url = cloudinary.uploader.upload(scrn)['secure_url']
                 bot.send_photo(update.message.chat.id, scrn_url)
             except IllegalURL:

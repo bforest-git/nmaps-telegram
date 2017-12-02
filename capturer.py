@@ -15,8 +15,8 @@ class IllegalURL(Exception):
 class Capturer:
     hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
                     ".style.display = 'none';")
-
-    def __init__(self):
+                    
+    def start_driver(self):
         chrome_options = Options()
         chrome_options.binary_location = os.getenv('GOOGLE_CHROME_BIN', '')
         chrome_options.add_argument('--disable-gpu')
@@ -29,7 +29,13 @@ class Capturer:
         self.drv.set_window_size(1280, 1024)
         self.drv.implicitly_wait(5)
 
+    def __init__(self):
+        self.start_driver()
         self.lock = Lock()
+        
+    def reboot(self):
+        self.drv.quit()
+        self.start_driver()
 
     @staticmethod
     def is_nmaps(url):
