@@ -11,6 +11,10 @@ class IllegalURL(Exception):
     pass
 
 
+class YMTempUnsupported(Exception):
+    pass
+
+
 class Capturer:
     chrome = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) '
               'Gecko/20100101 Firefox/55.0')
@@ -40,7 +44,7 @@ class Capturer:
         if spl.netloc == 'n.maps.yandex.ru' or spl.netloc == 'mapmaker.yandex.com':
             return True
         elif spl.netloc == 'yandex.ru' and spl.path.startswith('/maps'):
-            return False
+            raise YMTempUnsupported
         raise IllegalURL
 
     def take_screenshot(self, url):
@@ -55,7 +59,7 @@ class Capturer:
             if nmaps:
                 self.drv.execute_script(self.hide_sidebar)
 
-            sleep(6)
+            sleep(4)
         except WebDriverException as e:
             print(e)
         finally:

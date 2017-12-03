@@ -1,7 +1,7 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, Filters, InlineQueryHandler, ConversationHandler, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
 from telegram.error import TimedOut
-from capturer import Capturer, IllegalURL
+from capturer import Capturer, IllegalURL, YMTempUnsupported
 from uuid import uuid4
 from bs4 import BeautifulSoup
 from functools import wraps
@@ -73,18 +73,19 @@ def unrecognized(bot, update):
 
 
 def screenshot(bot, update):
-    update.message.reply_text('Screen tag!')
     for entity in update.message['entities']:
         if entity['type'] == 'url':
             url_start = int(entity['offset'])
             url_end = url_start + int(entity['length'])
             try:
                 scrn = cpt.take_screenshot(update.message.text[url_start:url_end])
-                cpt.reboot()
                 scrn_url = cloudinary.uploader.upload(scrn)['secure_url']
                 bot.send_photo(update.message.chat.id, scrn_url)
+                cpt.reboot()
             except IllegalURL:
                 update.message.reply_text(BOT_ILLEGAL_URL)
+            except YMTempUnsupported:
+                update.message.reply_text(BOT_YM_SCREENS_BANNED)
 
 
 @private
