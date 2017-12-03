@@ -5,8 +5,8 @@ from phrases import *
 
 telegram_key = os.getenv('TELEGRAM_API_KEY', '331488080:AAH8PEA9WnsZtFubYnwFI5EWDq1fvqb9ZAE')
 
-screen_hashtags = re.compile('#({}|{})'.format(HASH_SCREEN, HASH_SCREEN_ENG), flags=re.I | re.U)
-road_hashtag = re.compile('#({})'.format(HASH_ROADBLOCK), flags=re.I | re.U)
+screen_hashtags = re.compile('.*#({}|{}.*)'.format(HASH_SCREEN, HASH_SCREEN_ENG), flags=re.I | re.U)
+road_hashtag = re.compile('.*#({}.*)'.format(HASH_ROADBLOCK), flags=re.I | re.U)
 
 FEEDBACK_REQUESTED, SEARCH_QUERY_REQUESTED = 1, 1
 
