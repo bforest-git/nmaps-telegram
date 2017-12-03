@@ -1,5 +1,5 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, Filters, InlineQueryHandler, ConversationHandler, CallbackQueryHandler
-from telegram import ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
 from telegram.error import TimedOut
 from capturer import Capturer, IllegalURL
 from uuid import uuid4
@@ -85,21 +85,6 @@ def screenshot(bot, update):
                 bot.send_photo(update.message.chat.id, scrn_url)
             except IllegalURL:
                 update.message.reply_text(BOT_ILLEGAL_URL)
-
-
-def inlinequery(bot, update):
-    query = update.inline_query.query
-
-    results = [
-        InlineQueryResultArticle(
-            id=uuid4(),
-            title='Test',
-            description='This is a test inline handler',
-            input_message_content=InputTextMessageContent('This is a test inline answer')
-        )
-    ]
-
-    update.inline_query.answer(results)
 
 
 @private
@@ -231,9 +216,6 @@ def main():
         },
         fallbacks=[RegexHandler(r'⬅ Вернуться', cancel)]
     ))
-
-    # Inline queries
-    dp.add_handler(InlineQueryHandler(inlinequery))
 
     # Callbacks
     dp.add_handler(CallbackQueryHandler(roadblock_callback, pattern=r'^road\w+'))
