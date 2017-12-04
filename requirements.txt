@@ -5,3 +5,4 @@ cloudinary
 beautifulsoup4
 lxml
 psycopg2
+feedparser

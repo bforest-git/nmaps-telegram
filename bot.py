@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from functools import wraps
 from config import *
 from roads import new_roadblock, roadblock_callback
+from rss import rss
 import logging
 import cloudinary
 import cloudinary.uploader
@@ -194,6 +195,7 @@ def main():
     updater = Updater(telegram_key)
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
+    j = updater.job_queue
 
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(RegexHandler(r'📌 Полезные ссылки', bookmarks))
@@ -226,6 +228,9 @@ def main():
 
     # Logging errors
     dp.add_error_handler(error)
+
+    # Adds repeating jobs
+    j.run_repeating(rss, 300)
 
     # Actually start the bot
     updater.start_polling()

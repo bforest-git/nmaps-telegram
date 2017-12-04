@@ -16,6 +16,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS roads (user_id bigint,
 
 c.execute('''CREATE TABLE IF NOT EXISTS banned (id bigint primary key)''')
 c.execute('''CREATE TABLE IF NOT EXISTS settings (option text unique, value text)''')
+c.execute('''CREATE TABLE IF NOT EXISTS rss (last_published bigint primary key)''')
 
 try:
     c.execute('INSERT INTO settings VALUES (%s, %s)', ('roads_moderation', 'enabled'))
