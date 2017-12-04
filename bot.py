@@ -16,7 +16,8 @@ import requests
 
 
 # Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+logging.basicConfig(format='[%(asctime)s] [%(levelname)s] [bot]\n%(message)s\n',
+                    datefmt='%d-%m %H:%M:%S',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
