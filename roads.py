@@ -25,19 +25,21 @@ def new_roadblock(bot, update):
         return
     if update.message.chat.id == roads_chat:
         return
-    if update.message.chat.id == mods_chat:
+
+    user = bot.get_chat_member(mods_chat, update.message.from_user.id)
+    if user['status'] in ['creator', 'administrator', 'member']:
         bypass_moderators(bot, update)
         return
 
     update.message.reply_text(BOT_MSG_ACCEPT.format(user_name(update.message.from_user)))
-    keyboard = [[InlineKeyboardButton(BTN_ROADS_ACCEPT, callback_data='road_mod_approve'),
+    mods_keyboard = [[InlineKeyboardButton(BTN_ROADS_ACCEPT, callback_data='road_mod_approve'),
                  InlineKeyboardButton(BTN_CANCEL, callback_data='road_cancel')],
                 [InlineKeyboardButton(BTN_ROADS_REQUEST_INFO, callback_data='road_mod_request_info')],
                 [InlineKeyboardButton(BTN_ROADS_FRAUD, callback_data='road_mod_ban')]]
     msg = BOT_REQUEST_CHECK.format(user_name(update.message.from_user))
     mods_message = bot.send_message(mods_chat,
                                     msg,
-                                    reply_markup=InlineKeyboardMarkup(keyboard))
+                                    reply_markup=InlineKeyboardMarkup(mods_keyboard))
     update.message.forward(mods_chat)
 
     c.execute('INSERT INTO roads VALUES (%s, %s, %s, %s, %s)',
