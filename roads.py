@@ -1,7 +1,16 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from config import mods_chat, roads_chat, nmaps_chat, roads_staff
+from telegram.ext import BaseFilter
+from config import mods_chat, roads_chat, roads_staff, road_hashtag
 from phrases import *
 from db import db
+
+
+class RoadblockHashtagHandler(BaseFilter):
+    def filter(self, message):
+        return road_hashtag.match(message.caption)
+
+
+roadblock_filter = RoadblockHashtagHandler()
 
 
 def new_roadblock(bot, update):

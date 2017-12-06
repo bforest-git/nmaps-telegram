@@ -1,6 +1,7 @@
 HASH_SCREEN = 'скрин'
 HASH_SCREEN_ENG = 'screen'
 HASH_ROADBLOCK = 'перекрытие'
+HASH_ROADBLOCK_ENG = 'roadblock'
 
 BOT_ACTION_SELECT = 'Пожалуйста, выберите действие.'
 BOT_CHS_LINK = 'Для перехода на сайт нажмите нужную кнопку из списка.'

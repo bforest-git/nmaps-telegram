@@ -6,7 +6,7 @@ from uuid import uuid4
 from bs4 import BeautifulSoup
 from functools import wraps
 from config import *
-from roads import new_roadblock, roadblock_callback
+from roads import new_roadblock, roadblock_callback, roadblock_filter
 from rss import rss
 import logging
 import cloudinary
@@ -203,6 +203,7 @@ def main():
     dp.add_handler(RegexHandler(r'🚫 Сообщить о перекрытии', report_roadblock))
     dp.add_handler(RegexHandler(screen_hashtags, screenshot))
     dp.add_handler(RegexHandler(road_hashtag, new_roadblock))
+    dp.add_handler(MessageHandler(Filters.photo & roadblock_filter, new_roadblock))
 
     # Conversations
     dp.add_handler(ConversationHandler(
