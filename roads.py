@@ -12,13 +12,21 @@ class RoadblockHashtagHandler(BaseFilter):
 
 roadblock_filter = RoadblockHashtagHandler()
 
+keyboard = [[InlineKeyboardButton(BTN_ROADS_CLOSED, callback_data='road_closed'),
+             InlineKeyboardButton(BTN_ROADS_OPENED, callback_data='road_opened')],
+            [InlineKeyboardButton(BTN_ROADS_INFOPOINT, callback_data='road_info_added')],
+            [InlineKeyboardButton(BTN_CANCEL, callback_data='road_cancel')]]
+
 
 def new_roadblock(bot, update):
     c = db.cursor()
     c.execute('SELECT * FROM banned WHERE id=%s', (update.message.from_user.id,))
     if c.fetchone() is not None:
         return
-    if update.message.chat.id in (mods_chat, roads_chat):
+    if update.message.chat.id == roads_chat:
+        return
+    if update.message.chat.id == mods_chat:
+        bypass_moderators(bot, update)
         return
 
     update.message.reply_text(BOT_MSG_ACCEPT.format(user_name(update.message.from_user)))
@@ -81,16 +89,28 @@ def accept_roadblock(bot, query):
                             parse_mode='markdown')
     nmaps_message = retrieve_roadblock(mods_id=query.message.message_id)
     bot.forward_message(roads_chat, nmaps_message['chat_id'], nmaps_message['chat_message_id'])
-    keyboard = [[InlineKeyboardButton(BTN_ROADS_CLOSED, callback_data='road_closed'),
-                 InlineKeyboardButton(BTN_ROADS_OPENED, callback_data='road_opened')],
-                [InlineKeyboardButton(BTN_ROADS_INFOPOINT, callback_data='road_info_added')],
-                [InlineKeyboardButton(BTN_CANCEL, callback_data='road_cancel')]]
     roads_message = bot.send_message(roads_chat, BOT_NEW_ROADBLOCK, reply_markup=InlineKeyboardMarkup(keyboard))
 
     nmaps_message = retrieve_roadblock(mods_id=query.message.message_id)
     c = db.cursor()
     c.execute('UPDATE roads SET roads_message_id=%s WHERE chat_message_id=%s', (roads_message.message_id,
                                                                                 nmaps_message['chat_message_id']))
+    db.commit()
+    c.close()
+
+
+def bypass_moderators(bot, update):
+    update.message.reply_text(BOT_MSG_ACCEPT.format(user_name(update.message.from_user),
+                                                    update.message.from_user.id))
+    roads_message = bot.send_message(roads_chat, BOT_NEW_ROADBLOCK, reply_markup=InlineKeyboardMarkup(keyboard))
+    bot.forward_message(roads_chat, update.message.chat.id, update.message.message_id)
+
+    c = db.cursor()
+    c.execute('INSERT INTO roads VALUES(%s, %s, %s, %s, %s)', (update.message.from_user.id,
+                                                               update.message.chat.id,
+                                                               update.message.message_id,
+                                                               0,
+                                                               roads_message.message_id))
     db.commit()
     c.close()
 
