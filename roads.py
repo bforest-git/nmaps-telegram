@@ -104,8 +104,8 @@ def accept_roadblock(bot, query):
 def bypass_moderators(bot, update):
     update.message.reply_text(BOT_MSG_ACCEPT.format(user_name(update.message.from_user),
                                                     update.message.from_user.id))
-    roads_message = bot.send_message(roads_chat, BOT_NEW_ROADBLOCK, reply_markup=InlineKeyboardMarkup(keyboard))
     bot.forward_message(roads_chat, update.message.chat.id, update.message.message_id)
+    roads_message = bot.send_message(roads_chat, BOT_NEW_ROADBLOCK, reply_markup=InlineKeyboardMarkup(keyboard))
 
     c = db.cursor()
     c.execute('INSERT INTO roads VALUES(%s, %s, %s, %s, %s)', (update.message.from_user.id,
