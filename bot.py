@@ -134,8 +134,7 @@ def run_search(bot, update, user_data):
     elif user_data['search'] == 'club':
         search_club(bot, update)
 
-    user_data.clear()
-    return ConversationHandler.END
+    return SEARCH_QUERY_REQUESTED
 
 
 def search_rules(bot, update):
@@ -153,15 +152,15 @@ def search_rules(bot, update):
         answer += '```' + text + '```\n'
         answer += '____________________\n'
     if not answer:
-        update.message.reply_text(BOT_NOT_FOUND,
-                                  reply_markup=get_keyboard(update,
-                                                            subscribed(update.message.from_user.id)))
+        update.message.reply_text(BOT_NOT_FOUND)
     else:
         update.message.reply_text(answer,
                                   parse_mode='markdown',
-                                  disable_web_page_preview=True,
-                                  reply_markup=get_keyboard(update,
-                                                            subscribed(update.message.from_user.id)))
+                                  disable_web_page_preview=True)
+    update.message.reply_text(BOT_SRCH_CONTINUE,
+                              reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
+                                                               resize_keyboard=True,
+                                                               one_time_keyboard=True))
 
 
 def search_club(bot, update):
@@ -175,13 +174,16 @@ def search_club(bot, update):
         answer += '[' + title + '](' + link + ')\n'
         answer += '____________________\n'
     if not answer:
-        update.message.reply_text(BOT_NOT_FOUND, reply_markup=get_keyboard(update))
+        update.message.reply_text(BOT_NOT_FOUND)
     else:
         update.message.reply_text(answer,
                                   parse_mode='markdown',
-                                  disable_web_page_preview=True,
-                                  reply_markup=get_keyboard(update,
-                                                            subscribed(update.message.from_user.id)))
+                                  disable_web_page_preview=True)
+    update.message.reply_text(BOT_SRCH_CONTINUE,
+                              reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
+                                                               resize_keyboard=True,
+                                                               one_time_keyboard=True))
+
 
 
 @private
@@ -192,10 +194,11 @@ def report_roadblock(bot, update):
 
 
 @private
-def cancel(bot, update):
+def cancel(bot, update, user_data):
     update.message.reply_text(BOT_CANCELLED,
                               reply_markup=get_keyboard(update,
                                                         subscribed(update.message.from_user.id)))
+    user_data.clear()
     return ConversationHandler.END
 
 
@@ -227,7 +230,7 @@ def main():
         states={
             FEEDBACK_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)', receive_feedback)]
         },
-        fallbacks=[RegexHandler(r'⬅ Вернуться', cancel)]
+        fallbacks=[RegexHandler(r'⬅ Вернуться', cancel, pass_user_data=True)]
     ))
     dp.add_handler(ConversationHandler(
         entry_points=[RegexHandler(r'🔎 Поиск в Клубе', search, pass_user_data=True),
@@ -235,7 +238,7 @@ def main():
         states={
             SEARCH_QUERY_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)', run_search, pass_user_data=True)]
         },
-        fallbacks=[RegexHandler(r'⬅ Вернуться', cancel)]
+        fallbacks=[RegexHandler(r'⬅ Вернуться', cancel, pass_user_data=True)]
     ))
 
     # Callbacks
