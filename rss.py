@@ -1,3 +1,4 @@
+from telegram.error import TelegramError
 from db import db
 from calendar import timegm
 from config import nmaps_chat, mods_chat
@@ -44,14 +45,27 @@ def rss(bot, job):
     c.execute('''DELETE FROM rss''')
     c.execute('''INSERT INTO rss VALUES(%s)''', (new_latest_date,))
     db.commit()
-    c.close()
     log.info('Wrote latest timestamp to database: {}'.format(new_latest_date))
 
     if new_entries:
+        c.execute('SELECT id FROM subscribers')
+        subscribers = []
+        for id in c.fetchall():
+            subscribers.append(id[0])
+        log.info('Fetched subscribers')
+
         log.info('Sending new posts')
         for entry in list(reversed(new_entries)):
             log.info('Sending post: {}'.format(entry))
             bot.send_message(nmaps_chat, entry)
             bot.send_message(mods_chat, entry)
+            for subscriber in subscribers:
+                try:
+                    bot.send_message(subscriber, entry)
+                except TelegramError:
+                    pass
+
     else:
         log.info('No new posts')
+
+    c.close()

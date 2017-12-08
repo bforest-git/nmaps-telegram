@@ -1,5 +1,5 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, Filters, InlineQueryHandler, ConversationHandler, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent, ReplyKeyboardMarkup
 from telegram.error import TimedOut
 from capturer import Capturer, IllegalURL, YMTempUnsupported
 from uuid import uuid4
@@ -8,6 +8,8 @@ from functools import wraps
 from config import *
 from roads import new_roadblock, roadblock_callback, roadblock_filter
 from rss import rss
+from subscription import subscribe, unsubscribe, subscribed
+from helpers import get_keyboard
 import logging
 import cloudinary
 import cloudinary.uploader
@@ -43,7 +45,8 @@ def admins_only(f):
 @private
 def start(bot, update):
     update.message.reply_text(BOT_ACTION_SELECT,
-                              reply_markup=main_menu)
+                              reply_markup=get_keyboard(update,
+                                                        subscribed(update.message.from_user.id)))
 
 
 @private
@@ -71,7 +74,8 @@ def bookmarks(bot, update):
 @private
 def unrecognized(bot, update):
     update.message.reply_text(BOT_UNRECOGNIZED_MESSAGE,
-                              reply_markup=main_menu)
+                              reply_markup=get_keyboard(update,
+                                                        subscribed(update.message.from_user.id)))
 
 
 def screenshot(bot, update):
@@ -100,7 +104,9 @@ def request_feedback(bot, update):
 
 
 def receive_feedback(bot, update):
-    update.message.reply_text(BOT_FEEDBACK_SENT_USR, reply_markup=main_menu)
+    update.message.reply_text(BOT_FEEDBACK_SENT_USR,
+                              reply_markup=get_keyboard(update,
+                                                        subscribed(update.message.from_user.id)))
     bot.send_message(alexfox, update.message.text)
     return ConversationHandler.END
 
@@ -147,12 +153,15 @@ def search_rules(bot, update):
         answer += '```' + text + '```\n'
         answer += '____________________\n'
     if not answer:
-        update.message.reply_text(BOT_NOT_FOUND, reply_markup=main_menu)
+        update.message.reply_text(BOT_NOT_FOUND,
+                                  reply_markup=get_keyboard(update,
+                                                            subscribed(update.message.from_user.id)))
     else:
         update.message.reply_text(answer,
                                   parse_mode='markdown',
                                   disable_web_page_preview=True,
-                                  reply_markup=main_menu)
+                                  reply_markup=get_keyboard(update,
+                                                            subscribed(update.message.from_user.id)))
 
 
 def search_club(bot, update):
@@ -166,22 +175,27 @@ def search_club(bot, update):
         answer += '[' + title + '](' + link + ')\n'
         answer += '____________________\n'
     if not answer:
-        update.message.reply_text(BOT_NOT_FOUND, reply_markup=main_menu)
+        update.message.reply_text(BOT_NOT_FOUND, reply_markup=get_keyboard(update))
     else:
         update.message.reply_text(answer,
                                   parse_mode='markdown',
                                   disable_web_page_preview=True,
-                                  reply_markup=main_menu)
+                                  reply_markup=get_keyboard(update,
+                                                            subscribed(update.message.from_user.id)))
 
 
 @private
 def report_roadblock(bot, update):
-    update.message.reply_text(BOT_PRIVATE_ROAD_REPORT_USR, reply_markup=main_menu)
+    update.message.reply_text(BOT_PRIVATE_ROAD_REPORT_USR,
+                              reply_markup=get_keyboard(update,
+                                                        subscribed(update.message.from_user.id)))
 
 
 @private
 def cancel(bot, update):
-    update.message.reply_text(BOT_CANCELLED, reply_markup=main_menu)
+    update.message.reply_text(BOT_CANCELLED,
+                              reply_markup=get_keyboard(update,
+                                                        subscribed(update.message.from_user.id)))
     return ConversationHandler.END
 
 
@@ -204,6 +218,8 @@ def main():
     dp.add_handler(RegexHandler(screen_hashtags, screenshot))
     dp.add_handler(RegexHandler(road_hashtag, new_roadblock))
     dp.add_handler(MessageHandler(Filters.photo & roadblock_filter, new_roadblock))
+    dp.add_handler(RegexHandler(MENU_UNSUBSCRIBE, unsubscribe))
+    dp.add_handler(RegexHandler(MENU_SUBSCRIBE, subscribe))
 
     # Conversations
     dp.add_handler(ConversationHandler(
