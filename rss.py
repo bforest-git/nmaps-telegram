@@ -57,11 +57,13 @@ def rss(bot, job):
         log.info('Sending new posts')
         for entry in list(reversed(new_entries)):
             log.info('Sending post: {}'.format(entry))
-            bot.send_message(nmaps_chat, entry)
-            bot.send_message(mods_chat, entry)
+            instantview_url = 'https://t.me/iv?url={}&rhash=082e533d0deed1'.format(entry)
+            message_text = '[{}]({})'.format(entry, instantview_url)
+            bot.send_message(nmaps_chat, message_text, parse_mode='markdown')
+            bot.send_message(mods_chat, message_text, parse_mode='markdown')
             for subscriber in subscribers:
                 try:
-                    bot.send_message(subscriber, entry)
+                    bot.send_message(subscriber, message_text, parse_mode='markdown')
                 except TelegramError:
                     pass
 
