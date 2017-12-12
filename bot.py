@@ -1,14 +1,15 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, Filters, InlineQueryHandler, ConversationHandler, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent, ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, Filters, InlineQueryHandler, \
+    ConversationHandler, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.error import TimedOut
 from capturer import Capturer, IllegalURL, YMTempUnsupported
-from uuid import uuid4
 from bs4 import BeautifulSoup
 from functools import wraps
 from config import *
 from roads import new_roadblock, roadblock_callback, roadblock_filter
 from rss import rss
 from subscription import subscribe, unsubscribe, subscribed
+from inline import inline_search
 from helpers import get_keyboard
 import logging
 import cloudinary
@@ -252,6 +253,9 @@ def main():
 
     # Adds repeating jobs
     j.run_repeating(rss, 300)
+
+    # Inline handler
+    dp.add_handler(InlineQueryHandler(inline_search))
 
     # Actually start the bot
     updater.start_polling()

@@ -1,8 +1,13 @@
 import os
 import re
+from algoliasearch import algoliasearch
 from phrases import *
 
 telegram_key = os.getenv('TELEGRAM_API_KEY', '331488080:AAH8PEA9WnsZtFubYnwFI5EWDq1fvqb9ZAE')
+
+client = algoliasearch.Client(os.getenv('ALGOLIA_CLIENT'), os.getenv('ALGOLIASEARCH_API_KEY_SEARCH'))
+rules = client.init_index('rules')
+videos = client.init_index('videos')
 
 screen_hashtags = re.compile('.*#({}|{}).*'.format(HASH_SCREEN, HASH_SCREEN_ENG), flags=re.S | re.I | re.U)
 road_hashtag = re.compile('.*#({}|{}).*'.format(HASH_ROADBLOCK, HASH_ROADBLOCK_ENG), flags=re.S | re.I | re.U)

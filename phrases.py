@@ -76,3 +76,5 @@ BTN_ROADS_INFOPOINT = '⚠ Инфоточка установлена'
 BTN_CANCEL = '❌ Изменения не нужны'
 BTN_NEXT_PAGE = '▶️'
 BTN_PREV_PAGE = '◀️'
+
+INLINE_TEMPLATE = '<b>Правила рисования</b>\n\n{}\n\n<i>Кратко:</i> {}\n\n<i>Подробнее:</i> <a href="{}">{}</a>'
