@@ -217,8 +217,8 @@ def main():
     j = updater.job_queue
 
     dp.add_handler(CommandHandler('start', start))
-    dp.add_handler(RegexHandler(r'📌 Полезные ссылки', bookmarks))
-    dp.add_handler(RegexHandler(r'🚫 Сообщить о перекрытии', report_roadblock))
+    dp.add_handler(RegexHandler(MENU_LINKS, bookmarks))
+    dp.add_handler(RegexHandler(MENU_ROADS, report_roadblock))
     dp.add_handler(RegexHandler(screen_hashtags, screenshot))
     dp.add_handler(RegexHandler(road_hashtag, new_roadblock))
     dp.add_handler(MessageHandler(Filters.photo & roadblock_filter, new_roadblock))
@@ -227,19 +227,19 @@ def main():
 
     # Conversations
     dp.add_handler(ConversationHandler(
-        entry_points=[RegexHandler(r'💬 Оставить отзыв', request_feedback)],
+        entry_points=[RegexHandler(MENU_FEEDBACK, request_feedback)],
         states={
             FEEDBACK_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)', receive_feedback)]
         },
-        fallbacks=[RegexHandler(r'⬅ Вернуться', cancel, pass_user_data=True)]
+        fallbacks=[RegexHandler(MENU_RETURN, cancel, pass_user_data=True)]
     ))
     dp.add_handler(ConversationHandler(
-        entry_points=[RegexHandler(r'🔎 Поиск в Клубе', search, pass_user_data=True),
-                      RegexHandler(r'🔎 Поиск в Правилах', search, pass_user_data=True)],
+        entry_points=[RegexHandler(MENU_SEARCH_CLUB, search, pass_user_data=True),
+                      RegexHandler(MENU_SEARCH_RULES, search, pass_user_data=True)],
         states={
             SEARCH_QUERY_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)', run_search, pass_user_data=True)]
         },
-        fallbacks=[RegexHandler(r'⬅ Вернуться', cancel, pass_user_data=True)]
+        fallbacks=[RegexHandler(MENU_RETURN, cancel, pass_user_data=True)]
     ))
 
     # Callbacks
