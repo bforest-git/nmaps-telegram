@@ -13,16 +13,17 @@ def inline_search(bot, update):
 
     articles = []
     for result in results['hits']:
-        message_text = InputTextMessageContent(message_text=INLINE_TEMPLATE.format(result['path'],
-                                                                                   result['short'],
-                                                                                   result['url'],
-                                                                                   result['title']),
-                                               parse_mode='html')
-        articles.append(InlineQueryResultArticle(id=uuid4(),
-                                                 title=result['title'],
-                                                 url=result['url'],
-                                                 description=result['short'],
-                                                 # description=result['_snippetResult']['text']['value'],
-                                                 input_message_content=message_text,
-                                                 hide_url=True))
+        message_text = InputTextMessageContent(
+            message_text=INLINE_TEMPLATE.format(result['path'],
+                                                result['short'],
+                                                result['url'],
+                                                result['title']),
+            parse_mode='html')
+        articles.append(InlineQueryResultArticle(
+            id=uuid4(),
+            title=result['title'],
+            url=result['url'],
+            description=result['short'],
+            input_message_content=message_text,
+            hide_url=True))
     query.answer(articles, cache_time=0)

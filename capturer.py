@@ -4,7 +4,6 @@ from time import sleep
 from urllib.parse import urlsplit
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
-import os
 
 
 class IllegalURL(Exception):
@@ -41,7 +40,8 @@ class Capturer:
     @staticmethod
     def is_nmaps(url):
         spl = urlsplit(url)
-        if spl.netloc == 'n.maps.yandex.ru' or spl.netloc == 'mapmaker.yandex.com':
+        if spl.netloc == 'n.maps.yandex.ru' \
+                or spl.netloc == 'mapmaker.yandex.com':
             return True
         elif spl.netloc == 'yandex.ru' and spl.path.startswith('/maps'):
             raise YMTempUnsupported

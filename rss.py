@@ -1,7 +1,7 @@
 from telegram.error import TelegramError
 from db import db
 from calendar import timegm
-from config import nmaps_chat, mods_chat
+from config import nmaps_chat, mods_chat, instantview_url
 import feedparser
 import logging
 
@@ -24,50 +24,64 @@ log.addHandler(log_handler)
 
 def rss(bot, job):
     log.info('Starting RSS poster')
-    feed = feedparser.parse('https://yandex.ru/blog/narod-karta/rss')
+
+    new_entries, new_latest_date = get_new_entries()
 
     c = db.cursor()
-    c.execute('''SELECT * FROM rss''')
+    c.execute('DELETE FROM rss')
+    c.execute('INSERT INTO rss VALUES(%s)', (new_latest_date,))
+    db.commit()
+    log.info('Wrote latest timestamp to database: {}'.format(new_latest_date))
+
+    if new_entries:
+        subscribers = get_subscribers()
+        log.info('Fetched subscribers')
+        log.info('Sending new posts')
+        for entry in list(reversed(new_entries)):
+            send_post(bot, entry, subscribers)
+    else:
+        log.info('No new posts')
+
+    c.close()
+
+
+def get_new_entries():
+    feed = feedparser.parse('https://yandex.ru/blog/narod-karta/rss')
+    entries = feed.entries
+
+    c = db.cursor()
+    c.execute('SELECT * FROM rss')
     last_published = int(c.fetchone()[0])
     log.info('Last published post timestamp is {}'.format(last_published))
     new_latest_date = last_published
 
     new_entries = []
-    for entry in feed.entries:
-        if timegm(entry.published_parsed) > last_published:
-            if timegm(entry.published_parsed) > new_latest_date:
-                new_latest_date = timegm(entry.published_parsed)
-            log.info('New entry: {}'.format(entry.link))
-            new_entries.append(entry.link)
-        else:
-            break
+    i = 0
+    while timegm(entries[i].published_parsed) > last_published:
+        if timegm(entries[i].published_parsed) > new_latest_date:
+            new_latest_date = timegm(entries[i].published_parsed)
+        log.info('New entry: {}'.format(entries[i].link))
+        new_entries.append(entries[i].link)
+        i += 1
 
-    c.execute('''DELETE FROM rss''')
-    c.execute('''INSERT INTO rss VALUES(%s)''', (new_latest_date,))
-    db.commit()
-    log.info('Wrote latest timestamp to database: {}'.format(new_latest_date))
+    return new_entries, new_latest_date
 
-    if new_entries:
-        c.execute('SELECT id FROM subscribers')
-        subscribers = []
-        for id in c.fetchall():
-            subscribers.append(id[0])
-        log.info('Fetched subscribers')
 
-        log.info('Sending new posts')
-        for entry in list(reversed(new_entries)):
-            log.info('Sending post: {}'.format(entry))
-            instantview_url = 'https://t.me/iv?url={}&rhash=082e533d0deed1'.format(entry)
-            message_text = '[{}]({})'.format(entry, instantview_url)
-            bot.send_message(nmaps_chat, message_text, parse_mode='markdown')
-            bot.send_message(mods_chat, message_text, parse_mode='markdown')
-            for subscriber in subscribers:
-                try:
-                    bot.send_message(subscriber, message_text, parse_mode='markdown')
-                except TelegramError:
-                    pass
+def send_post(bot, url, subscribers):
+    log.info('Sending post: {}'.format(url))
+    message_text = '[{}]({})'.format(url, instantview_url.format(url))
+    try:
+        for subscriber in [nmaps_chat, mods_chat] + subscribers:
+            bot.send_message(subscriber, message_text, parse_mode='markdown')
+    except TelegramError:
+        pass
 
-    else:
-        log.info('No new posts')
 
+def get_subscribers():
+    c = db.cursor()
+    c.execute('SELECT id FROM subscribers')
+    subscribers = []
+    for id in c.fetchall():
+        subscribers.append(id[0])
     c.close()
+    return subscribers

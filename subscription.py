@@ -3,22 +3,20 @@ from phrases import BOT_SUBSCRIBED_USR, BOT_UNSUBSCRIBED_USR
 from helpers import get_keyboard
 
 
-def subscribe(bot, update):
+def update_subscription(bot, update):
     c = db.cursor()
-    c.execute('INSERT INTO subscribers VALUES (%s)', (update.message.from_user.id,))
+    if not subscribed(update.message.from_user.id):
+        c.execute('INSERT INTO subscribers VALUES (%s)',
+                  (update.message.from_user.id,))
+        update.message.reply_text(BOT_SUBSCRIBED_USR,
+                                  reply_markup=get_keyboard(update, True))
+    else:
+        c.execute('DELETE FROM subscribers WHERE id=(%s)',
+                  (update.message.from_user.id,))
+        update.message.reply_text(BOT_UNSUBSCRIBED_USR,
+                                  reply_markup=get_keyboard(update, False))
     db.commit()
     c.close()
-    update.message.reply_text(BOT_SUBSCRIBED_USR,
-                              reply_markup=get_keyboard(update, True))
-
-
-def unsubscribe(bot, update):
-    c = db.cursor()
-    c.execute('DELETE FROM subscribers WHERE id=(%s)', (update.message.from_user.id,))
-    db.commit()
-    c.close()
-    update.message.reply_text(BOT_UNSUBSCRIBED_USR,
-                              reply_markup=get_keyboard(update, False))
 
 
 def subscribed(id):
