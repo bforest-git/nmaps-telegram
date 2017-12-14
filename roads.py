@@ -102,7 +102,7 @@ def ban_roadblock_author(bot, query):
         query.from_user.id),
                             parse_mode='markdown')
     c = db.cursor()
-    c.execute('INSERT INTO banned VALUES(%s)', (nmaps_message['user_id'],))
+    c.execute('INSERT INTO banned VALUES (%s)', (nmaps_message['user_id'],))
     db.commit()
     c.close()
 
@@ -144,7 +144,7 @@ def bypass_moderators(bot, update):
                                      reply_markup=staff_keyboard)
 
     c = db.cursor()
-    c.execute('INSERT INTO roads VALUES(%s, %s, %s, %s, %s)',
+    c.execute('INSERT INTO roads VALUES (%s, %s, %s, %s, %s)',
               (update.message.from_user.id, update.message.chat.id,
                update.message.message_id, 0, roads_message.message_id))
     db.commit()

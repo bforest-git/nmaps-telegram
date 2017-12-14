@@ -16,7 +16,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS roads (user_id bigint,
 
 c.execute('CREATE TABLE IF NOT EXISTS banned (id bigint primary key)')
 c.execute('CREATE TABLE IF NOT EXISTS rss (last_published bigint primary key)')
-c.execute('CREATE TABLE IF NOT EXISTS subscribers(id bigint primary key)')
+c.execute('CREATE TABLE IF NOT EXISTS subscribers (id bigint primary key)')
 
 db.commit()
 c.close()
