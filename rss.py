@@ -24,7 +24,6 @@ log.addHandler(log_handler)
 
 def rss(bot, job):
     log.info('Starting RSS poster')
-
     new_entries, new_latest_date = get_new_entries()
 
     c = db.cursor()
@@ -39,9 +38,9 @@ def rss(bot, job):
         log.info('Sending new posts')
         for entry in list(reversed(new_entries)):
             send_post(bot, entry, subscribers)
+        log.info('Done sending posts!')
     else:
         log.info('No new posts')
-
     c.close()
 
 
@@ -70,11 +69,11 @@ def get_new_entries():
 def send_post(bot, url, subscribers):
     log.info('Sending post: {}'.format(url))
     message_text = '[{}]({})'.format(url, instantview_url.format(url))
-    try:
-        for subscriber in [nmaps_chat, mods_chat] + subscribers:
+    for subscriber in [nmaps_chat, mods_chat] + subscribers:
+        try:
             bot.send_message(subscriber, message_text, parse_mode='markdown')
-    except TelegramError:
-        pass
+        except TelegramError:
+            pass
 
 
 def get_subscribers():
