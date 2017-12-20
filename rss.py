@@ -28,7 +28,7 @@ def rss(bot, job):
 
     c = db.cursor()
     c.execute('DELETE FROM rss')
-    c.execute('INSERT INTO rss VALUES(%s)', (new_latest_date,))
+    c.execute('INSERT INTO rss VALUES (%s)', (new_latest_date,))
     db.commit()
     log.info('Wrote latest timestamp to database: {}'.format(new_latest_date))
 

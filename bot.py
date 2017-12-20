@@ -6,12 +6,7 @@ from telegram.error import TimedOut
 from config import admins, alexfox, road_hashtag, \
     screen_hashtags, telegram_key, rules_search_url, FEEDBACK_REQUESTED, \
     SEARCH_QUERY_REQUESTED
-from phrases import BOT_UNRECOGNIZED_MESSAGE, BOT_FEEDBACK_SENT_USR, \
-    MENU_RETURN, MENU_SEARCH_RULES, MENU_SEARCH_CLUB, MENU_ROADS, MENU_LINKS, \
-    MENU_SUBSCRIBE, BOT_ACTION_SELECT, BOT_YM_SCREENS_BANNED, \
-    BOT_ILLEGAL_URL, BOT_CHS_LINK, BOT_SEND_FEEDBACK_USR, BOT_NOT_FOUND, \
-    BOT_SRCH_CONTINUE, BOT_SRCH_QUERY, BOT_UNEXPECTED_ERROR, \
-    BOT_PRIVATE_ROAD_REPORT_USR, BOT_CANCELLED, MENU_UNSUBSCRIBE, MENU_FEEDBACK
+import phrases as p
 from capturer import Capturer, IllegalURL, YMTempUnsupported
 from bs4 import BeautifulSoup
 from functools import wraps
@@ -54,12 +49,12 @@ def admins_only(f):
 
 @private
 def send_instructions(bot, update, start=False):
-    if update.message.text == MENU_ROADS:
-        text = BOT_PRIVATE_ROAD_REPORT_USR
+    if update.message.text == p.MENU_ROADS:
+        text = p.BOT_PRIVATE_ROAD_REPORT_USR
     elif update.message.text == '/start' or start:
-        text = BOT_ACTION_SELECT
+        text = p.BOT_ACTION_SELECT
     else:
-        text = BOT_UNRECOGNIZED_MESSAGE
+        text = p.BOT_UNRECOGNIZED_MESSAGE
     update.message.reply_text(
         text,
         reply_markup=get_keyboard(update,
@@ -78,7 +73,6 @@ def bookmarks(bot, update):
                 'Клуб',
                 url='https://yandex.ru/blog/narod-karta'
             )
-
         ],
         [
             InlineKeyboardButton('ПКК', url='https://pkk5.rosreestr.ru/'),
@@ -87,12 +81,11 @@ def bookmarks(bot, update):
         [
             InlineKeyboardButton('ЕГРП365', url='https://egrp365.ru/map/'),
             InlineKeyboardButton('TerraServer',
-                                 url='https://www.terraserver.com/'
-                                 )
+                                 url='https://www.terraserver.com/')
         ],
         [InlineKeyboardButton('Реформа ЖКХ', url='https://www.reformagkh.ru/')]
     ]
-    update.message.reply_text(BOT_CHS_LINK,
+    update.message.reply_text(p.BOT_CHS_LINK,
                               reply_markup=InlineKeyboardMarkup(keyboard))
     send_instructions(bot, update, True)
 
@@ -110,16 +103,16 @@ def screenshot(bot, update):
                 bot.send_photo(update.message.chat.id, scrn_url)
                 cpt.reboot()
             except IllegalURL:
-                update.message.reply_text(BOT_ILLEGAL_URL)
+                update.message.reply_text(p.BOT_ILLEGAL_URL)
             except YMTempUnsupported:
-                update.message.reply_text(BOT_YM_SCREENS_BANNED)
+                update.message.reply_text(p.BOT_YM_SCREENS_BANNED)
 
 
 @private
 def request_feedback(bot, update):
     update.message.reply_text(
-        BOT_SEND_FEEDBACK_USR,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
+        p.BOT_SEND_FEEDBACK_USR,
+        reply_markup=ReplyKeyboardMarkup([[p.MENU_RETURN]],
                                          one_time_keyboard=True,
                                          resize_keyboard=True))
     return FEEDBACK_REQUESTED
@@ -127,7 +120,7 @@ def request_feedback(bot, update):
 
 def receive_feedback(bot, update):
     update.message.reply_text(
-        BOT_FEEDBACK_SENT_USR,
+        p.BOT_FEEDBACK_SENT_USR,
         reply_markup=get_keyboard(update,
                                   subscribed(update.message.from_user.id)))
     bot.send_message(alexfox, update.message.text)
@@ -136,21 +129,22 @@ def receive_feedback(bot, update):
 
 @private
 def search(bot, update, user_data):
-    if update.message.text == MENU_SEARCH_RULES:
+    if update.message.text == p.MENU_SEARCH_RULES:
         user_data['search'] = 'rules'
     else:
         user_data['search'] = 'club'
     update.message.reply_text(
-        BOT_SRCH_QUERY,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
+        p.BOT_SRCH_QUERY,
+        reply_markup=ReplyKeyboardMarkup([[p.MENU_RETURN]],
                                          resize_keyboard=True,
-                                         one_time_keyboard=True))
+                                         one_time_keyboard=True)
+    )
     return SEARCH_QUERY_REQUESTED
 
 
 def run_search(bot, update, user_data):
     if 'search' not in user_data:
-        update.message.reply_text(BOT_UNEXPECTED_ERROR)
+        update.message.reply_text(p.BOT_UNEXPECTED_ERROR)
         send_instructions(bot, update, start=True)
         return ConversationHandler.END
     if user_data['search'] == 'rules':
@@ -176,14 +170,14 @@ def search_rules(bot, update):
         answer += '```' + text + '```\n'
         answer += '____________________\n'
     if not answer:
-        update.message.reply_text(BOT_NOT_FOUND)
+        update.message.reply_text(p.BOT_NOT_FOUND)
     else:
         update.message.reply_text(answer,
                                   parse_mode='markdown',
                                   disable_web_page_preview=True)
     update.message.reply_text(
-        BOT_SRCH_CONTINUE,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
+        p.BOT_SRCH_CONTINUE,
+        reply_markup=ReplyKeyboardMarkup([[p.MENU_RETURN]],
                                          resize_keyboard=True,
                                          one_time_keyboard=True))
 
@@ -199,14 +193,14 @@ def search_club(bot, update):
         answer += '[' + title + '](' + link + ')\n'
         answer += '____________________\n'
     if not answer:
-        update.message.reply_text(BOT_NOT_FOUND)
+        update.message.reply_text(p.BOT_NOT_FOUND)
     else:
         update.message.reply_text(answer,
                                   parse_mode='markdown',
                                   disable_web_page_preview=True)
     update.message.reply_text(
-        BOT_SRCH_CONTINUE,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
+        p.BOT_SRCH_CONTINUE,
+        reply_markup=ReplyKeyboardMarkup([[p.MENU_RETURN]],
                                          resize_keyboard=True,
                                          one_time_keyboard=True))
 
@@ -214,7 +208,7 @@ def search_club(bot, update):
 @private
 def cancel(bot, update, user_data):
     update.message.reply_text(
-        BOT_CANCELLED,
+        p.BOT_CANCELLED,
         reply_markup=get_keyboard(update,
                                   subscribed(update.message.from_user.id)))
     user_data.clear()
@@ -234,33 +228,33 @@ def main():
     dp = updater.dispatcher
     jobs = updater.job_queue
 
-    dp.add_handler(RegexHandler(r'(/start|{})'.format(MENU_ROADS),
+    dp.add_handler(RegexHandler(r'(/start|{})'.format(p.MENU_ROADS),
                                 send_instructions))
-    dp.add_handler(RegexHandler(MENU_LINKS, bookmarks))
+    dp.add_handler(RegexHandler(p.MENU_LINKS, bookmarks))
     dp.add_handler(RegexHandler(screen_hashtags, screenshot))
     dp.add_handler(RegexHandler(road_hashtag, new_roadblock))
     dp.add_handler(MessageHandler(Filters.photo & roadblock_filter,
                                   new_roadblock))
-    dp.add_handler(RegexHandler(r'({}|{})'.format(MENU_SUBSCRIBE,
-                                                  MENU_UNSUBSCRIBE),
+    dp.add_handler(RegexHandler(r'({}|{})'.format(p.MENU_SUBSCRIBE,
+                                                  p.MENU_UNSUBSCRIBE),
                                 update_subscription))
 
     # Conversations
     dp.add_handler(ConversationHandler(
-        entry_points=[RegexHandler(MENU_FEEDBACK, request_feedback)],
+        entry_points=[RegexHandler(p.MENU_FEEDBACK, request_feedback)],
         states={
             FEEDBACK_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)',
                                               receive_feedback)]
         },
-        fallbacks=[RegexHandler(MENU_RETURN,
+        fallbacks=[RegexHandler(p.MENU_RETURN,
                                 cancel,
                                 pass_user_data=True)]
     ))
     dp.add_handler(ConversationHandler(
-        entry_points=[RegexHandler(MENU_SEARCH_CLUB,
+        entry_points=[RegexHandler(p.MENU_SEARCH_CLUB,
                                    search,
                                    pass_user_data=True),
-                      RegexHandler(MENU_SEARCH_RULES,
+                      RegexHandler(p.MENU_SEARCH_RULES,
                                    search,
                                    pass_user_data=True)],
         states={
@@ -268,7 +262,7 @@ def main():
                                                   run_search,
                                                   pass_user_data=True)]
         },
-        fallbacks=[RegexHandler(MENU_RETURN,
+        fallbacks=[RegexHandler(p.MENU_RETURN,
                                 cancel,
                                 pass_user_data=True)]
     ))
