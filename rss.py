@@ -1,4 +1,5 @@
 from telegram.error import TelegramError
+from itertools import chain
 from db import db
 from calendar import timegm
 from config import nmaps_chat, mods_chat, instantview_url
@@ -69,7 +70,7 @@ def get_new_entries():
 def send_post(bot, url, subscribers):
     log.info('Sending post: {}'.format(url))
     message_text = '[{}]({})'.format(url, instantview_url.format(url))
-    for subscriber in [nmaps_chat, mods_chat] + subscribers:
+    for subscriber in chain((nmaps_chat, mods_chat), subscribers):
         try:
             bot.send_message(subscriber, message_text, parse_mode='markdown')
         except TelegramError:
