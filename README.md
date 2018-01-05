@@ -25,5 +25,8 @@ The bot sends links to all new posts in [Mapeditor's Club](https://yandex.ru/blo
 ### [Mapeditor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml) search :mag:
 You can search through the club or rules. Those options are available in the main menu.
 
+### License
+This project is licensed under the GPL-3.0 License - see the [LICENSE](https://github.com/MoarCatz/nmaps-telegram/blob/master/LICENSE) file for details.
+
 ##### Having problems or questions?
 [Click here](https://t.me/nmapsbot) -> Tap on "/start" -> Write to us :wave:
