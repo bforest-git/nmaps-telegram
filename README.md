@@ -1,35 +1,35 @@
-# Что это, и зачем оно нужно
-Бот создан для удобной работы в Telegram-чате сервиса Народная карта Яндекса. Он интегрирован с другими чатами, и это...
+# What it is?
+Bot was created for quickly working in Telergam-chat of Yandex Map Editor. This bot connected with other chats, and it's...
 
-#### ...Это бот, который:
-1. Отправляет в картографическое производство Яндекса сообщения о начале и окончании перекрытий и дорожных работ
-1. Делает скриншоты по ссылку из Народной карты
-1. Постит новости из Клуба Народной карты
-1. Ищет по Клубу Народной карты и Правилам редактирования
-1. [NDA]
+#### ...It's bot can:
+1. Sending to Yandex reports about starting and ending block of roads and road works.
+1. Making screenshots by link to Yandex Map Editor or Yandex.Maps
+1. Posting news from [Map Editor's Club](https://yandex.ru/blog/narod-karta)
+1. Searching in [Map Editor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml)
+1. <b>[NDA]</b> Some service functions
 
-#### Примечание! Этот бот работает только в Telegram-чате @nmaps
+#### Attention! This bot work only on [@nmaps](https://t.me/nmaps)
 
-## Как работает передача сообщений о перекрытиях?
-Чтобы отправить репорт о перекрытии или дорожных работах, нужно написать в личных сообщениях боту или в чате @nmaps сообщение с хэш-тегом #перекрытие, указав время действия ограничений, ссылку на место на картах, ссылку на пост в СМИ (опционально - фотографию с места). При наличии можно прислать схему перекрытия.
+## How work reporting messages about road blocks?
+To send a report about the road blocks or the road works, you need to write in private messages to the bot or chat [@nmaps](https://t.me/nmaps) message with the hash tag #roadblock (or #перекрытие - on Russian), time constraints, link to place on Yandex Maps and link to post on mass media. Optional - road block's scheme
 
-## Как делать скриншоты?
-Чтобы сделать скриншот, нужно написать в личных сообщениях боту или в чате @nmaps сообщение с хэш-тегом #скрин или #screen и ссылкой на место на Народной карте. Временно не работает функционал для захвата скриншотов с Яндекс.Карт, но работы в этом направлении ведутся.
+## How make screenshots?
+To take a screenshot, you need to write in private messages to the bot or in the chat [@nmaps](https://t.me/nmaps) message with the hash tag #screen (or #скрин - on Russian)  and a link to the place on the Yandex Map Editor. Temporarily not working the functionality to capture screenshots from Yandex.Maps, but we're working on it
+## How work posting from [Map Editor's Club](https://yandex.ru/blog/narod-karta)?
+Bot sending links to all new posts in [Map Editor's Club](https://yandex.ru/blog/narod-karta) in 5 minutes after publiching. Available functional of personal subscribes. If you want to subscribe for news you need give command /start and choose "Подписаться на рассылку".
 
-## Как работает рассылка новостей из Клуба?
-Бот отправляет все новые посты из Клуба Народной карты в чат в течение 5 минут после публикации. Доступнен функционал рассылки в личных сообщениях - для этого нужно в личных сообщениях дать команду /start и в появившемся меню выбрать "Подписаться на рассылку".
+## How to search in [Map Editor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml)?
+To searching, you need open personal chat with bot -> Give command /start -> Choose "Поиск в Клубе" (Search in Club) or "Поиск в Правилах" (Search in Rules)
 
-## Как искать в Клубе и по Правилам?
-Перейдите в личную переписку с ботом -> Напишите "/start" -> Выберите "Поиск в Клубе" или "Поиск в Правилах"
-# Команды, которые понимает бот:
-#### В личных сообщениях:
-/start - показать главное меню
-##### Дополнительно - триггеры:
-#перекрытие - передать сообщение о перекрытии<br>
-#screen или #скрин - сделать скриншот по ссылке с Народной карты или Яндекс.Карт
+# Bot understand command:
+#### In personal chat:
+/start - show main menu
+##### Additionally - triggers:
+#roadblock or #перекрытие - to send a report about the road blocks or the road works<br>
+#screen or #скрин - to take a screenshot
 
-#### В чатах работают только триггеры, команды отключены.
-#перекрытие - передать сообщение о перекрытии<br>
-#screen или #скрин - сделать скриншот по ссылке с Народной карты или Яндекс.Карт
+#### In group chat work triggers only:
+#roadblock or #перекрытие - to send a report about the road blocks or the road works<br>
+#screen or #скрин - to take a screenshot
 
-## Возникли проблемы? [Перейдите сюда](t.me/nmapsbot) -> Напишите "/start" -> Выберите "Оставить отзыв"
+#### Have problems or questions?<br>[Click there](t.me/nmapsbot) -> Send "/start" -> Choose "Оставить отзыв"
