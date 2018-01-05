@@ -4,37 +4,26 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/a3ec41945814b64a925f/maintainability)](https://codeclimate.com/github/MoarCatz/nmaps-telegram/maintainability)
 
 # nmaps-telegram
-Unofficial Yandex.Mapeditor Telegram community bot.
+Unofficial Yandex.Mapeditor Telegram community bot running at [@nmapsbot](https://t.me/nmapsbot).
 
 #### ...This bot can:
-1. Sending to Yandex reports about starting and ending block of roads and road works.
-1. Making screenshots by link to Yandex Map Editor or Yandex.Maps
-1. Posting news from [Map Editor's Club](https://yandex.ru/blog/narod-karta)
-1. Searching in [Map Editor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml)
-1. <b>[NDA]</b> Some service functions
+1. Send roadblocks reports to Yandex staff :car:
+2. Make screenshots of Yandex.Mapeditor or Yandex.Maps :camera:
+3. Post news from [Mapeditor's Club](https://yandex.ru/blog/narod-karta) :newspaper:
+4. Search in [Mapeditor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml) :mag:
+5. More features are coming soon :zap:
 
-#### Attention! This bot work only on [@nmaps](https://t.me/nmaps)
+### Roadblocks :car:
+In order to send a report, write to the bot privately or to the [@nmaps](https://t.me/nmaps) with `#roadblock`/`#перекрытие` hashtag. Don't forget to inclide time constraints, Yandex Maps place link and link to post on mass media. You will receive the resolution shortly.
 
-## How work reporting messages about road blocks?
-To send a report about the road blocks or the road works, you need to write in private messages to the bot or chat [@nmaps](https://t.me/nmaps) message with the hash tag #roadblock (or #перекрытие - on Russian), time constraints, link to place on Yandex Maps and link to post on mass media. Optional - road block's scheme
+### Screenshots :camera:
+Same as above, you need to include Yandex.Maps or Yandex.Mapeditor link and a `#screen`/`#скрин` tag.
 
-## How make screenshots?
-To take a screenshot, you need to write in private messages to the bot or in the chat [@nmaps](https://t.me/nmaps) message with the hash tag #screen (or #скрин - on Russian)  and a link to the place on the Yandex Map Editor. Temporarily not working the functionality to capture screenshots from Yandex.Maps, but we're working on it
-## How work posting from [Map Editor's Club](https://yandex.ru/blog/narod-karta)?
-Bot sending links to all new posts in [Map Editor's Club](https://yandex.ru/blog/narod-karta) in 5 minutes after publiching. Available functional of personal subscribes. If you want to subscribe for news you need give command /start and choose "Подписаться на рассылку".
+### [Mapeditor's Club](https://yandex.ru/blog/narod-karta) RSS feed :newspaper:
+The bot sends links to all new posts in [Mapeditor's Club](https://yandex.ru/blog/narod-karta) in 5 minutes after publishing. It is also possible to subscribe directly in private messages. Just PM the bot and you're done.
 
-## How to search in [Map Editor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml)?
-To searching, you need open personal chat with bot -> Give command /start -> Choose "Поиск в Клубе" (Search in Club) or "Поиск в Правилах" (Search in Rules)
+### [Mapeditor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml) search :mag:
+You can search through the club or rules. Those options are available in the main menu.
 
-# Bot understand command:
-#### In personal chat:
-/start - show main menu
-##### Additionally - triggers:
-#roadblock or #перекрытие - to send a report about the road blocks or the road works<br>
-#screen or #скрин - to take a screenshot
-
-#### In group chat work triggers only:
-#roadblock or #перекрытие - to send a report about the road blocks or the road works<br>
-#screen or #скрин - to take a screenshot
-
-#### Have problems or questions?<br>[Click there](t.me/nmapsbot) -> Send "/start" -> Choose "Оставить отзыв"
+##### Having problems or questions?
+[Click here](https://t.me/nmapsbot) -> Tap on "/start" -> Write to us :wave:
