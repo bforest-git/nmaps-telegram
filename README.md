@@ -8,7 +8,7 @@ Bot was created for quickly working in Telergam-chat of Yandex Map Editor. This 
 1. Searching in [Map Editor's Club](https://yandex.ru/blog/narod-karta) and [Rules](http://help.yandex.ru/nmaps/rules_2.xml)
 1. <b>[NDA]</b> Some service functions
 
-#### Attention! This bor work only on [@nmaps](https://t.me/nmaps)
+#### Attention! This bot work only on [@nmaps](https://t.me/nmaps)
 
 ## How work reporting messages about road blocks?
 To send a report about the road blocks or the road works, you need to write in private messages to the bot or chat [@nmaps](https://t.me/nmaps) message with the hash tag #roadblock (or #перекрытие - on Russian), time constraints, link to place on Yandex Maps and link to post on mass media. Optional - road block's scheme
@@ -32,4 +32,4 @@ To searching, you need open personal chat with bot -> Give command /start -> Cho
 #roadblock or #перекрытие - to send a report about the road blocks or the road works<br>
 #screen or #скрин - to take a screenshot
 
-## Have problems or questions?<br>[Click there](t.me/nmapsbot) -> Send "/start" -> Choose "Оставить отзыв"
+#### Have problems or questions?<br>[Click there](t.me/nmapsbot) -> Send "/start" -> Choose "Оставить отзыв"
