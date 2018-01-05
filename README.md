@@ -1,7 +1,12 @@
-# What it is?
-Bot was created for quickly working in Telergam-chat of Yandex Map Editor. This bot connected with other chats, and it's...
+<img src="https://avatars3.githubusercontent.com/u/21263910?v=3&s=100" alt="MoarCatz logo"
+     title="MoarCatz" align="right" />
+     
+[![Maintainability](https://api.codeclimate.com/v1/badges/a3ec41945814b64a925f/maintainability)](https://codeclimate.com/github/MoarCatz/nmaps-telegram/maintainability)
 
-#### ...It's bot can:
+# nmaps-telegram
+Unofficial Yandex.Mapeditor Telegram community bot.
+
+#### ...This bot can:
 1. Sending to Yandex reports about starting and ending block of roads and road works.
 1. Making screenshots by link to Yandex Map Editor or Yandex.Maps
 1. Posting news from [Map Editor's Club](https://yandex.ru/blog/narod-karta)
