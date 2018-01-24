@@ -13,6 +13,8 @@ from db import db
 
 class RoadblockHashtagHandler(BaseFilter):
     def filter(self, message):
+        if not message.caption:
+            return False
         return road_hashtag.match(message.caption)
 
 
