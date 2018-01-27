@@ -11,7 +11,8 @@ from phrases import BOT_UNRECOGNIZED_MESSAGE, BOT_FEEDBACK_SENT_USR, \
     MENU_SUBSCRIBE, BOT_ACTION_SELECT, BOT_YM_SCREENS_BANNED, \
     BOT_ILLEGAL_URL, BOT_CHS_LINK, BOT_SEND_FEEDBACK_USR, BOT_NOT_FOUND, \
     BOT_SRCH_CONTINUE, BOT_SRCH_QUERY, BOT_UNEXPECTED_ERROR, \
-    BOT_PRIVATE_ROAD_REPORT_USR, BOT_CANCELLED, MENU_UNSUBSCRIBE, MENU_FEEDBACK
+    BOT_PRIVATE_ROAD_REPORT_USR, BOT_CANCELLED, MENU_UNSUBSCRIBE, \
+    MENU_FEEDBACK, BOT_INLINE_INSTRUCTIONS
 from capturer import Capturer, IllegalURL, YMTempUnsupported
 from bs4 import BeautifulSoup
 from functools import wraps
@@ -54,9 +55,12 @@ def admins_only(f):
 
 @private
 def send_instructions(bot, update, start=False):
-    if update.message.text == MENU_ROADS:
-        text = BOT_PRIVATE_ROAD_REPORT_USR
-    elif update.message.text == '/start' or start:
+    instructions = {MENU_ROADS: BOT_PRIVATE_ROAD_REPORT_USR,
+                    '/start inline-help': BOT_INLINE_INSTRUCTIONS,
+                    '/start': BOT_ACTION_SELECT}
+    if update.message.text in instructions:
+        text = instructions[update.message.text]
+    elif start:
         text = BOT_ACTION_SELECT
     else:
         text = BOT_UNRECOGNIZED_MESSAGE
@@ -230,7 +234,7 @@ def main():
     dp = updater.dispatcher
     j = updater.job_queue
 
-    dp.add_handler(RegexHandler(r'(/start|{})'.format(MENU_ROADS),
+    dp.add_handler(RegexHandler(r'(/start[a-z-]*|{})'.format(MENU_ROADS),
                                 send_instructions))
     dp.add_handler(RegexHandler(MENU_LINKS, bookmarks))
     dp.add_handler(RegexHandler(screen_hashtags, screenshot))

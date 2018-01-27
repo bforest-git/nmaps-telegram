@@ -31,7 +31,9 @@ mods_chat = int(os.getenv('MODSCHAT', '-1001304260305'))
 roads_chat = int(os.getenv('ROADSCHAT', '-259382209'))
 
 alexfox = 30375360
-admins = list(map(int, os.getenv('ADMINS', str(alexfox)).split(',')))
+bforest = 291582989
+admins = list(map(int, os.getenv('ADMINS',
+                                 '{},{}'.format(alexfox, bforest)).split(',')))
 roads_staff = os.getenv('ROADS_STAFF', 'Bagirov').split(',')
 
 instantview_url = 'https://t.me/iv?url={}&rhash=082e533d0deed1'
