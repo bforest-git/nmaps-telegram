@@ -66,6 +66,7 @@ def send_instructions(bot, update, start=False):
         text = BOT_UNRECOGNIZED_MESSAGE
     update.message.reply_text(
         text,
+        parse_mode='markdown',
         reply_markup=get_keyboard(update,
                                   subscribed(update.message.from_user.id)))
 
