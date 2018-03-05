@@ -11,7 +11,7 @@ def update_subscription(bot, update):
         update.message.reply_text(BOT_SUBSCRIBED_USR,
                                   reply_markup=get_keyboard(update, True))
     else:
-        c.execute('DELETE FROM subscribers WHERE id=(%s)',
+        c.execute('DELETE FROM subscribers WHERE id=%s',
                   (update.message.from_user.id,))
         update.message.reply_text(BOT_UNSUBSCRIBED_USR,
                                   reply_markup=get_keyboard(update, False))
@@ -21,7 +21,7 @@ def update_subscription(bot, update):
 
 def subscribed(id):
     c = db.cursor()
-    c.execute('SELECT * FROM subscribers WHERE id=(%s)', (id,))
+    c.execute('SELECT * FROM subscribers WHERE id=%s', (id,))
     if c.fetchone() is not None:
         return True
     return False

@@ -68,10 +68,12 @@ def bookmarks(bot, update):
         [
             InlineKeyboardButton(
                 'Правила',
-                url='https://yandex.ru/support/nmaps/rules_2.html'),
+                url='https://yandex.ru/support/nmaps/rules_2.html'
+            ),
             InlineKeyboardButton(
                 'Клуб',
-                url='https://yandex.ru/blog/narod-karta')
+                url='https://yandex.ru/blog/narod-karta'
+            )
         ],
         [
             InlineKeyboardButton('ПКК', url='https://pkk5.rosreestr.ru/'),
@@ -136,14 +138,15 @@ def search(bot, update, user_data):
         BOT_SRCH_QUERY,
         reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
                                          resize_keyboard=True,
-                                         one_time_keyboard=True))
+                                         one_time_keyboard=True)
+    )
     return SEARCH_QUERY_REQUESTED
 
 
 def run_search(bot, update, user_data):
     if 'search' not in user_data:
         update.message.reply_text(BOT_UNEXPECTED_ERROR)
-        send_instructions(bot, update, True)
+        send_instructions(bot, update, start=True)
         return ConversationHandler.END
     if user_data['search'] == 'rules':
         retrieve_search_results(update, in_rules=True)
@@ -211,7 +214,7 @@ def main():
     updater = Updater(telegram_key)
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-    j = updater.job_queue
+    jobs = updater.job_queue
 
     dp.add_handler(RegexHandler(r'(/start[a-z-]*|{})'.format(MENU_ROADS),
                                 send_instructions))
@@ -263,7 +266,7 @@ def main():
     dp.add_error_handler(error)
 
     # Adds repeating jobs
-    j.run_repeating(rss, 300)
+    jobs.run_repeating(rss, 300)
 
     # Inline handler
     dp.add_handler(InlineQueryHandler(inline_search))
