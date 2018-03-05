@@ -1,9 +1,7 @@
 import os
 import re
 from algoliasearch import algoliasearch
-from phrases import HASH_SCREEN, HASH_SCREEN_ENG, HASH_ROADBLOCK, \
-    HASH_ROADBLOCK_ENG, MENU_LINKS, MENU_SEARCH_CLUB, MENU_SEARCH_RULES, \
-    MENU_ROADS, MENU_FEEDBACK
+from phrases import *
 
 telegram_key = os.getenv('TELEGRAM_API_KEY',
                          '331488080:AAH8PEA9WnsZtFubYnwFI5EWDq1fvqb9ZAE')
@@ -39,3 +37,4 @@ roads_staff = os.getenv('ROADS_STAFF', 'Bagirov').split(',')
 
 instantview_url = 'https://t.me/iv?url={}&rhash=082e533d0deed1'
 rules_search_url = 'https://yandex.ru/support/search-results/?service=nmaps&query='
+club_search_url = 'https://yandex.ru/blog/narod-karta/search?text='

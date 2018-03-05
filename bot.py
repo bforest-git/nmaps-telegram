@@ -3,16 +3,8 @@ from telegram.ext import Updater, MessageHandler, RegexHandler, Filters, \
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, \
     ReplyKeyboardMarkup
 from telegram.error import TimedOut
-from config import admins, alexfox, road_hashtag, \
-    screen_hashtags, telegram_key, rules_search_url, FEEDBACK_REQUESTED, \
-    SEARCH_QUERY_REQUESTED
-from phrases import BOT_UNRECOGNIZED_MESSAGE, BOT_FEEDBACK_SENT_USR, \
-    MENU_RETURN, MENU_SEARCH_RULES, MENU_SEARCH_CLUB, MENU_ROADS, MENU_LINKS, \
-    MENU_SUBSCRIBE, BOT_ACTION_SELECT, BOT_YM_SCREENS_BANNED, \
-    BOT_ILLEGAL_URL, BOT_CHS_LINK, BOT_SEND_FEEDBACK_USR, BOT_NOT_FOUND, \
-    BOT_SRCH_CONTINUE, BOT_SRCH_QUERY, BOT_UNEXPECTED_ERROR, \
-    BOT_PRIVATE_ROAD_REPORT_USR, BOT_CANCELLED, MENU_UNSUBSCRIBE, \
-    MENU_FEEDBACK, BOT_INLINE_INSTRUCTIONS
+from config import *
+from phrases import *
 from capturer import Capturer, IllegalURL, YMTempUnsupported
 from bs4 import BeautifulSoup
 from functools import wraps
@@ -64,9 +56,8 @@ def send_instructions(bot, update, start=False):
         text = BOT_ACTION_SELECT
     else:
         text = BOT_UNRECOGNIZED_MESSAGE
-    update.message.reply_text(
+    update.message.reply_markdown(
         text,
-        parse_mode='markdown',
         reply_markup=get_keyboard(update,
                                   subscribed(update.message.from_user.id)))
 
@@ -155,56 +146,43 @@ def run_search(bot, update, user_data):
         send_instructions(bot, update, True)
         return ConversationHandler.END
     if user_data['search'] == 'rules':
-        search_rules(bot, update)
+        retrieve_search_results(update, in_rules=True)
     elif user_data['search'] == 'club':
-        search_club(bot, update)
+        retrieve_search_results(update, in_rules=False)
 
     return SEARCH_QUERY_REQUESTED
 
 
-def search_rules(bot, update):
-    page = requests.get(rules_search_url +
-                        update.message.text.replace(' ', '+'))
+def retrieve_search_results(update, in_rules):
+    if in_rules:
+        page = requests.get(rules_search_url +
+                            update.message.text.replace(' ', '+'))
+    else:
+        page = requests.get(club_search_url +
+                            update.message.text.replace(' ', '+'))
     soup = BeautifulSoup(page.text, 'lxml')
     answer = ''
-    for item in soup.find_all('div', class_='results__item'):
-        if item.find_all('div')[1].text != 'Народная карта':
-            continue
-        title = item.find('div').text.replace('&nbsp;', ' ')
-        link = 'https://yandex.ru/support/' + item.attrs['data-document']
-        text = item.find_all('div')[2].text
-        answer += '[' + title + '](' + link + ')\n'
-        answer += '```' + text + '```\n'
-        answer += '____________________\n'
+
+    if in_rules:
+        for item in soup.find_all('div', class_='results__item'):
+            if item.find_all('div')[1].text != 'Народная карта':
+                continue
+            title = item.find('div').text.replace('&nbsp;', ' ')
+            link = 'https://yandex.ru/support/' + item.attrs['data-document']
+            text = item.find_all('div')[2].text
+            answer += '[' + title + '](' + link + ')\n```' \
+                      + text + '```\n____________________\n'
+    else:
+        for item in soup.find_all('a', class_='b-serp-item'):
+            title = item.find('h2').text
+            link = 'https://yandex.ru' + item['href']
+            answer += '[' + title + '](' + link + ')\n____________________\n'
+
     if not answer:
         update.message.reply_text(BOT_NOT_FOUND)
     else:
-        update.message.reply_text(answer,
-                                  parse_mode='markdown',
-                                  disable_web_page_preview=True)
-    update.message.reply_text(
-        BOT_SRCH_CONTINUE,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
-                                         resize_keyboard=True,
-                                         one_time_keyboard=True))
-
-
-def search_club(bot, update):
-    page = requests.get('https://yandex.ru/blog/narod-karta/search?text=' +
-                        update.message.text.replace(' ', '+'))
-    soup = BeautifulSoup(page.text, 'lxml')
-    answer = ''
-    for item in soup.find_all('a', class_='b-serp-item'):
-        title = item.find('h2').text
-        link = 'https://yandex.ru' + item['href']
-        answer += '[' + title + '](' + link + ')\n'
-        answer += '____________________\n'
-    if not answer:
-        update.message.reply_text(BOT_NOT_FOUND)
-    else:
-        update.message.reply_text(answer,
-                                  parse_mode='markdown',
-                                  disable_web_page_preview=True)
+        update.message.reply_markdown(answer,
+                                      disable_web_page_preview=True)
     update.message.reply_text(
         BOT_SRCH_CONTINUE,
         reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],

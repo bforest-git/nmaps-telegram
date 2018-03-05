@@ -1,13 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import BaseFilter
 from config import mods_chat, roads_chat, roads_staff, road_hashtag
-from phrases import BTN_ROADS_CLOSED, BTN_ROADS_OPENED, BTN_ROADS_INFOPOINT, \
-    BTN_CANCEL, BTN_ROADS_ACCEPT, BTN_ROADS_FRAUD, BTN_ROADS_REQUEST_INFO, \
-    BOT_MSG_ACCEPT, BOT_REQUEST_CHECK, BOT_NOT_ROAD_STAFF, \
-    BOT_REQUEST_CANCELLED_USR, BOT_REQUEST_CANCELLED, BOT_USER_BANNED, \
-    BOT_SENT_TO_STAFF, BOT_ROADBLOCK_DEL_USR, BOT_ROADBLOCK_SET_USR, \
-    BOT_INFOPOINT_SET_USR, BOT_INVESTIGATING, BOT_ROADBLOCK_DEL, \
-    BOT_ROADBLOCK_SET, BOT_INFOPOINT_SET, BOT_NEW_ROADBLOCK
+from phrases import *
 from db import db
 
 
@@ -62,8 +56,8 @@ def new_roadblock(bot, update):
         bypass_moderators(bot, update)
         return
     update.message.reply_text(BOT_MSG_ACCEPT.format(
-        user_name(update.message.from_user)))
-    msg = BOT_REQUEST_CHECK.format(user_name(update.message.from_user))
+        update.message.from_user.name))
+    msg = BOT_REQUEST_CHECK.format(update.message.from_user.name)
     mods_message = bot.send_message(mods_chat,
                                     msg,
                                     reply_markup=mods_keyboard)
@@ -89,7 +83,7 @@ def cancel_roadblock(bot, query):
                      BOT_REQUEST_CANCELLED_USR,
                      reply_to_message_id=nmaps_message['chat_message_id'])
     query.edit_message_text(BOT_REQUEST_CANCELLED.format(
-        user_name(query.from_user),
+        query.from_user.name,
         query.from_user.id),
                             parse_mode='markdown')
 
@@ -100,7 +94,7 @@ def ban_roadblock_author(bot, query):
     else:
         nmaps_message = retrieve_roadblock(roads_id=query.message.message_id)
     query.edit_message_text(BOT_USER_BANNED.format(
-        user_name(query.from_user),
+        query.from_user.name,
         query.from_user.id),
                             parse_mode='markdown')
     c = db.cursor()
@@ -111,7 +105,7 @@ def ban_roadblock_author(bot, query):
 
 def request_roadblock_info(bot, query):
     query.edit_message_text(BOT_INVESTIGATING.format(
-        user_name(query.from_user),
+        query.from_user.name,
         query.from_user.id),
                             reply_markup=investigation_keyboard,
                             parse_mode='markdown')
@@ -119,7 +113,7 @@ def request_roadblock_info(bot, query):
 
 def accept_roadblock(bot, query):
     query.edit_message_text(BOT_SENT_TO_STAFF.format(
-        user_name(query.from_user),
+        query.from_user.name,
         query.from_user.id),
                             parse_mode='markdown')
     nmaps_message = retrieve_roadblock(mods_id=query.message.message_id)
@@ -138,8 +132,9 @@ def accept_roadblock(bot, query):
 
 
 def bypass_moderators(bot, update):
-    update.message.reply_text(BOT_MSG_ACCEPT.format(
-        user_name(update.message.from_user), update.message.from_user.id))
+    update.message.reply_text(
+        BOT_MSG_ACCEPT.format(update.message.from_user.name,
+                              update.message.from_user.id))
     bot.forward_message(roads_chat, update.message.chat.id,
                         update.message.message_id)
     roads_message = bot.send_message(roads_chat, BOT_NEW_ROADBLOCK,
@@ -170,7 +165,7 @@ def send_roadblock_resolution(bot, query):
 
     bot.send_message(nmaps_message['chat_id'], msg,
                      reply_to_message_id=nmaps_message['chat_message_id'])
-    query.edit_message_text(btn_msg.format(user_name(query.from_user),
+    query.edit_message_text(btn_msg.format(query.from_user.name,
                                            query.from_user.id),
                             parse_mode='markdown')
 
@@ -204,13 +199,6 @@ def roadblock_callback(bot, update):
         ban_roadblock_author(bot, update.callback_query)
     else:
         send_roadblock_resolution(bot, update.callback_query)
-
-
-def user_name(user):
-    if user.username is not None:
-        return '@' + user.username
-    else:
-        return user.first_name
 
 
 def banned(user):
