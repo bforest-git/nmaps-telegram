@@ -72,7 +72,7 @@ def send_post(bot, url, subscribers):
     message_text = '[{}]({})'.format(url, instantview_url.format(url))
     for subscriber in chain((nmaps_chat, mods_chat), subscribers):
         try:
-            bot.send_markdown(subscriber, message_text)
+            bot.send_message(subscriber, message_text, parse_mode='markdown')
         except TelegramError:
             pass
 
