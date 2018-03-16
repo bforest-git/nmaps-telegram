@@ -69,3 +69,5 @@ inline_templates = {'rules': {'text': '<b>Правила рисования</b>\
                               },
                     'rubrics': {'text': '<b>Рубрикатор</b>\n\n<b>Рубрика: {}</b>\n{}\n\n<a href="https://yandex.ru/support/nmaps/app_poi.html">Перейти в рубрикатор</a>',
                                 'args': ('title', 'text')}}
+
+STREET_TRANSLITERATOR = 'https://script.google.com/macros/s/AKfycbwCfGxk22dNUACxjRMULtVo4UzzRwfk49g9rIy-yycPMACtEps2/exec'

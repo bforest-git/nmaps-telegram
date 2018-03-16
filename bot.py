@@ -84,7 +84,22 @@ def bookmarks(bot: Bot, update: Update) -> None:
             InlineKeyboardButton('TerraServer',
                                  url='https://www.terraserver.com/')
         ],
-        [InlineKeyboardButton('Реформа ЖКХ', url='https://www.reformagkh.ru/')]
+        [
+            InlineKeyboardButton('Реформа ЖКХ',
+                                 url='https://www.reformagkh.ru/'),
+            InlineKeyboardButton('КЛАДР',
+                                 url='https://kladr-rf.ru/')
+        ],
+        [
+            InlineKeyboardButton('Водный реестр',
+                                 url='http://textual.ru/gvr'),
+            InlineKeyboardButton('ФГИС',
+                                 url='http://fgis.economy.gov.ru/fgis/')
+        ],
+        [
+            InlineKeyboardButton('Транслитератор улиц',
+                                 url=STREET_TRANSLITERATOR)
+        ]
     ]
     update.message.reply_text(BOT_CHS_LINK,
                               reply_markup=InlineKeyboardMarkup(keyboard))
