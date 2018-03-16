@@ -1,7 +1,7 @@
 from telegram.ext import Updater, MessageHandler, RegexHandler, Filters, \
     InlineQueryHandler, ConversationHandler, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, \
-    ReplyKeyboardMarkup, Bot, Update
+    ReplyKeyboardMarkup, Bot, Update, ChatAction
 from telegram.error import TimedOut
 from config import *
 from phrases import *
@@ -97,6 +97,8 @@ def screenshot(bot: Bot, update: Update) -> None:
             url_start = int(entity['offset'])
             url_end = url_start + int(entity['length'])
             try:
+                bot.send_chat_action(update.effective_chat.id,
+                                     ChatAction.UPLOAD_PHOTO)
                 scrn = cpt.take_screenshot(
                     update.message.text[url_start:url_end]
                 )
@@ -209,12 +211,48 @@ def error(_bot: Bot, _update: Update, exc: Exception) -> None:
     logger.error(exc)
 
 
+@private
+def typing(bot: Bot, update: Update) -> None:
+    bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
+
+
+def welcome(bot: Bot, update: Update) -> None:
+    user_name = update.effective_message.new_chat_members[0].name
+    to_welcome, chat, message = False, 0, ''
+
+    if update.effective_chat.id == nmaps_chat:
+        to_welcome = True
+        chat = nmaps_chat
+        message = BOT_WELCOME_NMAPS.format(user_name)
+    elif update.effective_chat.id == mods_chat:
+        to_welcome = True
+        chat = mods_chat
+        message = BOT_WELCOME_MODS.format(user_name)
+    elif update.effective_chat.id == roads_chat:
+        to_welcome = True
+        chat = roads_chat
+        message = BOT_WELCOME_ROADS.format(user_name)
+
+    if to_welcome:
+        bot.send_message(chat,
+                         message,
+                         reply_to_message_id=update.message.message_id,
+                         disable_web_page_preview=True)
+
+
 def main():
     """Start the bot"""
     updater = Updater(telegram_key)
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
     jobs = updater.job_queue
+
+    # Typing
+    dp.add_handler(MessageHandler(Filters.all, typing), group=-1)
+
+    # Welcome
+    dp.add_handler(MessageHandler(Filters.status_update.new_chat_members,
+                                  welcome))
 
     dp.add_handler(RegexHandler(r'(/start[a-z-]*|{})'.format(MENU_ROADS),
                                 send_instructions))
