@@ -1,4 +1,5 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Bot, Update, \
+    Message, CallbackQuery, User
 from telegram.ext import BaseFilter
 from config import mods_chat, roads_chat, roads_staff, road_hashtag
 from phrases import *
@@ -6,7 +7,7 @@ from db import db
 
 
 class RoadblockHashtagHandler(BaseFilter):
-    def filter(self, message):
+    def filter(self, message: Message) -> any:
         if not message.caption:
             return False
         return road_hashtag.match(message.caption)
@@ -15,7 +16,7 @@ class RoadblockHashtagHandler(BaseFilter):
 roadblock_filter = RoadblockHashtagHandler()
 
 
-def build_keyboard(buttons):
+def build_keyboard(buttons: tuple) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [[InlineKeyboardButton(label, callback_data=callback)]
          for label, callback in buttons]
@@ -42,10 +43,10 @@ investigation_buttons = (
 )
 
 staff_keyboard, mods_keyboard, investigation_keyboard = \
-    map(build_keyboard, [staff_buttons, mods_buttons, investigation_buttons])
+    map(build_keyboard, (staff_buttons, mods_buttons, investigation_buttons))
 
 
-def new_roadblock(bot, update):
+def new_roadblock(bot: Bot, update: Update) -> None:
     if banned(update.message.from_user):
         return
     if update.message.chat.id == roads_chat:
@@ -71,7 +72,7 @@ def new_roadblock(bot, update):
     c.close()
 
 
-def cancel_roadblock(bot, query):
+def cancel_roadblock(bot: Bot, query: CallbackQuery) -> None:
     if query.message.chat.id == mods_chat:
         nmaps_message = retrieve_roadblock(mods_id=query.message.message_id)
     else:
@@ -88,7 +89,7 @@ def cancel_roadblock(bot, query):
                             parse_mode='markdown')
 
 
-def ban_roadblock_author(bot, query):
+def ban_roadblock_author(_bot: Bot, query: CallbackQuery) -> None:
     if query.message.chat.id == mods_chat:
         nmaps_message = retrieve_roadblock(mods_id=query.message.message_id)
     else:
@@ -103,7 +104,7 @@ def ban_roadblock_author(bot, query):
     c.close()
 
 
-def request_roadblock_info(bot, query):
+def request_roadblock_info(_bot: Bot, query: CallbackQuery) -> None:
     query.edit_message_text(BOT_INVESTIGATING.format(
         query.from_user.name,
         query.from_user.id),
@@ -111,7 +112,7 @@ def request_roadblock_info(bot, query):
                             parse_mode='markdown')
 
 
-def accept_roadblock(bot, query):
+def accept_roadblock(bot: Bot, query: CallbackQuery) -> None:
     query.edit_message_text(BOT_SENT_TO_STAFF.format(
         query.from_user.name,
         query.from_user.id),
@@ -131,7 +132,7 @@ def accept_roadblock(bot, query):
     c.close()
 
 
-def bypass_moderators(bot, update):
+def bypass_moderators(bot: Bot, update: Update) -> None:
     update.message.reply_text(
         BOT_MSG_ACCEPT.format(update.message.from_user.name,
                               update.message.from_user.id))
@@ -148,7 +149,7 @@ def bypass_moderators(bot, update):
     c.close()
 
 
-def send_roadblock_resolution(bot, query):
+def send_roadblock_resolution(bot: Bot, query: CallbackQuery) -> None:
     if query.from_user.last_name not in roads_staff:
         query.answer(BOT_NOT_ROAD_STAFF)
         return
@@ -170,7 +171,7 @@ def send_roadblock_resolution(bot, query):
                             parse_mode='markdown')
 
 
-def retrieve_roadblock(**kwargs):
+def retrieve_roadblock(**kwargs) -> dict:
     c = db.cursor()
 
     if 'mods_id' in kwargs:
@@ -187,7 +188,7 @@ def retrieve_roadblock(**kwargs):
     return roadblock
 
 
-def roadblock_callback(bot, update):
+def roadblock_callback(bot: Bot, update: Update) -> None:
     query = update.callback_query
     if query.data == 'road_mod_approve':
         accept_roadblock(bot, update.callback_query)
@@ -201,7 +202,7 @@ def roadblock_callback(bot, update):
         send_roadblock_resolution(bot, update.callback_query)
 
 
-def banned(user):
+def banned(user: User) -> bool:
     c = db.cursor()
     c.execute('SELECT * FROM banned WHERE id=%s', (user.id,))
     return c.fetchone() is not None

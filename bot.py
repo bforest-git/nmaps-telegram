@@ -1,7 +1,7 @@
 from telegram.ext import Updater, MessageHandler, RegexHandler, Filters, \
     InlineQueryHandler, ConversationHandler, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, \
-    ReplyKeyboardMarkup
+    ReplyKeyboardMarkup, Bot, Update
 from telegram.error import TimedOut
 from config import *
 from phrases import *
@@ -46,7 +46,7 @@ def admins_only(f):
 
 
 @private
-def send_instructions(bot, update, start=False):
+def send_instructions(_bot: Bot, update: Update, start=False) -> None:
     instructions = {MENU_ROADS: BOT_PRIVATE_ROAD_REPORT_USR,
                     '/start inline-help': BOT_INLINE_INSTRUCTIONS,
                     '/start': BOT_ACTION_SELECT}
@@ -63,7 +63,7 @@ def send_instructions(bot, update, start=False):
 
 
 @private
-def bookmarks(bot, update):
+def bookmarks(bot: Bot, update: Update) -> None:
     keyboard = [
         [
             InlineKeyboardButton(
@@ -91,7 +91,7 @@ def bookmarks(bot, update):
     send_instructions(bot, update, True)
 
 
-def screenshot(bot, update):
+def screenshot(bot: Bot, update: Update) -> None:
     for entity in update.message['entities']:
         if entity['type'] == 'url':
             url_start = int(entity['offset'])
@@ -110,7 +110,7 @@ def screenshot(bot, update):
 
 
 @private
-def request_feedback(bot, update):
+def request_feedback(_bot: Bot, update: Update) -> int:
     update.message.reply_text(
         BOT_SEND_FEEDBACK_USR,
         reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
@@ -119,7 +119,7 @@ def request_feedback(bot, update):
     return FEEDBACK_REQUESTED
 
 
-def receive_feedback(bot, update):
+def receive_feedback(bot: Bot, update: Update) -> int:
     update.message.reply_text(
         BOT_FEEDBACK_SENT_USR,
         reply_markup=get_keyboard(update,
@@ -129,7 +129,7 @@ def receive_feedback(bot, update):
 
 
 @private
-def search(bot, update, user_data):
+def search(_bot: Bot, update: Update, user_data: dict) -> int:
     if update.message.text == MENU_SEARCH_RULES:
         user_data['search'] = 'rules'
     else:
@@ -143,7 +143,7 @@ def search(bot, update, user_data):
     return SEARCH_QUERY_REQUESTED
 
 
-def run_search(bot, update, user_data):
+def run_search(bot: Bot, update: Update, user_data: dict) -> int:
     if 'search' not in user_data:
         update.message.reply_text(BOT_UNEXPECTED_ERROR)
         send_instructions(bot, update, start=True)
@@ -156,7 +156,7 @@ def run_search(bot, update, user_data):
     return SEARCH_QUERY_REQUESTED
 
 
-def retrieve_search_results(update, in_rules):
+def retrieve_search_results(update: Update, in_rules: bool) -> None:
     if in_rules:
         page = requests.get(rules_search_url +
                             update.message.text.replace(' ', '+'))
@@ -194,7 +194,7 @@ def retrieve_search_results(update, in_rules):
 
 
 @private
-def cancel(bot, update, user_data):
+def cancel(_bot: Bot, update: Update, user_data: dict) -> int:
     update.message.reply_text(
         BOT_CANCELLED,
         reply_markup=get_keyboard(update,
@@ -203,10 +203,10 @@ def cancel(bot, update, user_data):
     return ConversationHandler.END
 
 
-def error(bot, update, error):
-    if error == TimedOut:
+def error(_bot: Bot, _update: Update, exc: Exception) -> None:
+    if exc == TimedOut:
         return
-    logger.error(error)
+    logger.error(exc)
 
 
 def main():

@@ -23,22 +23,22 @@ class Capturer:
     hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
                     ".style.display = 'none';")
 
-    def start_driver(self):
+    def start_driver(self) -> None:
         self.drv = webdriver.PhantomJS('phantomjs')
 
         self.drv.set_window_size(1280, 1024)
         self.drv.implicitly_wait(5)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.start_driver()
         self.lock = Lock()
 
-    def reboot(self):
+    def reboot(self) -> None:
         self.drv.quit()
         self.start_driver()
 
     @staticmethod
-    def is_nmaps(url):
+    def is_nmaps(url: str) -> bool:
         spl = urlsplit(url)
         if spl.netloc in ('n.maps.yandex.ru', 'mapmaker.yandex.com'):
             return True
@@ -46,7 +46,7 @@ class Capturer:
             raise YMTempUnsupported
         raise IllegalURL
 
-    def take_screenshot(self, url):
+    def take_screenshot(self, url: str) -> BytesIO:
         self.lock.acquire()
         try:
             nmaps = self.is_nmaps(url)
@@ -65,5 +65,5 @@ class Capturer:
             self.lock.release()
         return BytesIO(self.drv.get_screenshot_as_png())
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.drv.quit()

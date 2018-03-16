@@ -1,9 +1,10 @@
 from db import db
 from phrases import BOT_SUBSCRIBED_USR, BOT_UNSUBSCRIBED_USR
 from helpers import get_keyboard
+from telegram import Bot, Update
 
 
-def update_subscription(bot, update):
+def update_subscription(_bot: Bot, update: Update) -> None:
     c = db.cursor()
     if not subscribed(update.message.from_user.id):
         c.execute('INSERT INTO subscribers VALUES (%s)',
@@ -19,7 +20,7 @@ def update_subscription(bot, update):
     c.close()
 
 
-def subscribed(id):
+def subscribed(id: int) -> bool:
     c = db.cursor()
     c.execute('SELECT * FROM subscribers WHERE id=%s', (id,))
     if c.fetchone() is not None:

@@ -1,4 +1,5 @@
 from telegram.error import TelegramError
+from telegram import Bot
 from itertools import chain
 from db import db
 from calendar import timegm
@@ -23,7 +24,7 @@ log_handler.setFormatter(log_fmt)
 log.addHandler(log_handler)
 
 
-def rss(bot, job):
+def rss(bot: Bot, _job) -> None:
     log.info('Starting RSS poster')
     new_entries, new_latest_date = get_new_entries()
 
@@ -45,7 +46,7 @@ def rss(bot, job):
     c.close()
 
 
-def get_new_entries():
+def get_new_entries() -> tuple:
     feed = feedparser.parse('https://yandex.ru/blog/narod-karta/rss')
     entries = feed.entries
 
@@ -67,7 +68,7 @@ def get_new_entries():
     return new_entries, new_latest_date
 
 
-def send_post(bot, url, subscribers):
+def send_post(bot: Bot, url: str, subscribers: list) -> None:
     log.info('Sending post: {}'.format(url))
     message_text = '[{}]({})'.format(url, instantview_url.format(url))
     for subscriber in chain((nmaps_chat, mods_chat), subscribers):
@@ -77,7 +78,7 @@ def send_post(bot, url, subscribers):
             pass
 
 
-def get_subscribers():
+def get_subscribers() -> list:
     c = db.cursor()
     c.execute('SELECT id FROM subscribers')
     subscribers = []
