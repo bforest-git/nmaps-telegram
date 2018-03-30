@@ -10,8 +10,7 @@ def inline_search(_bot: Bot, update: Update) -> None:
 
     search_results = []
     for index in indices:
-        if query.from_user.id not in admins and index.index_name != 'rubrics' \
-                and index.index_name != 'links':
+        if query.from_user.id not in admins and index.index_name != 'rubrics':
             continue
         search_results.append((index.index_name,
                                index.search(query.query)))
