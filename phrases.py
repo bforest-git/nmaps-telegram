@@ -64,10 +64,14 @@ BTN_NEXT_PAGE = '▶️'
 BTN_PREV_PAGE = '◀️'
 
 INLINE_HELP_BUTTON = 'Помощь'
-inline_templates = {'rules': {'text': '<b>Правила рисования</b>\n{}\n\n<b>{}</b>\n<i>Кратко:</i> {}\n\n<a href="{}">Перейти к пункту правил</a>',
+inline_templates = {'rules': {'text': '📖 <b>Правила рисования</b>\n{}\n\n<b>{}</b>\n<i>Кратко:</i> {}\n\n<a href="{'
+                                      '}">Перейти к пункту правил</a>',
                               'args': ('path', 'title', 'short', 'url')
                               },
-                    'rubrics': {'text': '<b>Рубрикатор</b>\n\n<b>Рубрика: {}</b>\n{}\n\n<a href="https://yandex.ru/support/nmaps/app_poi.html">Перейти в рубрикатор</a>',
-                                'args': ('title', 'text')}}
+                    'rubrics': {'text': '🏢 <b>Рубрикатор</b>\n\n<b>Рубрика: {}</b>\n{}\n\n<a '
+                                        'href="https://yandex.ru/support/nmaps/app_poi.html">Перейти в рубрикатор</a>',
+                                'args': ('title', 'text')},
+                    'links': {'text': '🌐 <b>Полезные ссылки</b>\n\n<b>{}</b>\n{}',
+                              'args': ('title', 'text')}}
 
 STREET_TRANSLITERATOR = 'https://script.google.com/macros/s/AKfycbwCfGxk22dNUACxjRMULtVo4UzzRwfk49g9rIy-yycPMACtEps2/exec'

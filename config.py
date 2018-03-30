@@ -8,9 +8,11 @@ telegram_key = os.getenv('TELEGRAM_API_KEY',
 
 client = algoliasearch.Client(os.getenv('ALGOLIA_CLIENT', 'key'),
                               os.getenv('ALGOLIASEARCH_API_KEY_SEARCH', 'key'))
+
+links = client.init_index('links')
 rules = client.init_index('rules')
 rubrics = client.init_index('rubrics')
-indices = (rules, rubrics)
+indices = (links, rules, rubrics)
 
 screen_hashtags = re.compile('.*#({}|{}).*'.format(HASH_SCREEN,
                                                    HASH_SCREEN_ENG),
