@@ -17,8 +17,10 @@ indices = (links, rules, rubrics)
 screen_hashtags = re.compile('.*#({}|{}).*'.format(HASH_SCREEN,
                                                    HASH_SCREEN_ENG),
                              flags=re.S | re.I)
-road_hashtag = re.compile('.*#({}|{}).*'.format(HASH_ROADBLOCK,
-                                                HASH_ROADBLOCK_ENG),
+road_hashtag = re.compile('.*#({}|{}|{}|{}).*'.format(HASH_ROADBLOCK,
+                                                      HASH_ROADBLOCK_ENG,
+                                                      HASH_ROAD,
+                                                      HASH_ROAD_ENG),
                           flags=re.S | re.I)
 
 FEEDBACK_REQUESTED, SEARCH_QUERY_REQUESTED = 1, 1

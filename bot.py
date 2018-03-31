@@ -93,7 +93,7 @@ def bookmarks(bot: Bot, update: Update) -> None:
         [
             InlineKeyboardButton('Водный реестр',
                                  url='http://textual.ru/gvr'),
-            InlineKeyboardButton('ФГИС',
+            InlineKeyboardButton('ФГИС ТП',
                                  url='http://fgis.economy.gov.ru/fgis/')
         ],
         [
@@ -140,8 +140,11 @@ def receive_feedback(bot: Bot, update: Update) -> int:
     update.message.reply_text(
         BOT_FEEDBACK_SENT_USR,
         reply_markup=get_keyboard(update,
-                                  subscribed(update.message.from_user.id)))
-    bot.send_message(alexfox, update.message.text)
+                                  subscribed(update.effective_user.id)))
+    bot.send_message(alexfox,
+                     BOT_DELIVER_FEEDBACK.format(update.effective_user.name,
+                                                 update.message.text),
+                     parse_mode='markdown')
     return ConversationHandler.END
 
 

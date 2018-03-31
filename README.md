@@ -14,7 +14,9 @@ Unofficial Yandex.Mapeditor Telegram community bot running at [@nmapsbot](https:
 5. More features are coming soon :zap:
 
 ### Roadblocks :car:
-In order to send a report, write to the bot privately or to the [@nmaps](https://t.me/nmaps) with `#roadblock`/`#перекрытие` hashtag. Don't forget to inclide time constraints, Yandex Maps place link and link to post on mass media. You will receive the resolution shortly.
+In order to send a report, write to the bot privately or to the [@nmaps](https://t.me/nmaps) with
+`#roadblock`/`#перекрытие`/`#дороги`/`#roads` hashtag. Don't forget to inclide time constraints, Yandex Maps place
+link and link to post on mass media. You will receive the resolution shortly.
 
 ### Screenshots :camera:
 Same as above, you need to include Yandex.Maps or Yandex.Mapeditor link and a `#screen`/`#скрин` tag.
