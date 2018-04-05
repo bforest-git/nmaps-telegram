@@ -250,6 +250,10 @@ def welcome(bot: Bot, update: Update) -> None:
         to_welcome = True
         chat = roads_chat
         message = BOT_WELCOME_ROADS.format(user_name)
+    elif update.effective_chat.id == english_chat:
+        to_welcome = True
+        chat = english_chat
+        message = BOT_WELCOME_ENG.format(user_name)
 
     if to_welcome:
         bot.send_message(chat,

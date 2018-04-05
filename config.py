@@ -32,6 +32,7 @@ main_menu = [[MENU_LINKS],
 nmaps_chat = int(os.getenv('NMAPSCHAT', '-1001136617457'))
 mods_chat = int(os.getenv('MODSCHAT', '-1001304260305'))
 roads_chat = int(os.getenv('ROADSCHAT', '-259382209'))
+english_chat = -1001308645324
 
 alexfox = 30375360
 bforest = 291582989
