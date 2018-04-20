@@ -4,6 +4,7 @@ from itertools import chain
 from db import db
 from calendar import timegm
 from config import nmaps_chat, mods_chat, instantview_url
+from phrases import BOT_NEW_RSS
 import feedparser
 import logging
 
@@ -70,7 +71,7 @@ def get_new_entries() -> tuple:
 
 def send_post(bot: Bot, url: str, subscribers: list) -> None:
     log.info('Sending post: {}'.format(url))
-    message_text = '[{}]({})'.format(url, instantview_url.format(url))
+    message_text = BOT_NEW_RSS.format(instantview_url.format(url), url)
     for subscriber in chain((nmaps_chat, mods_chat), subscribers):
         try:
             bot.send_message(subscriber, message_text, parse_mode='markdown')
