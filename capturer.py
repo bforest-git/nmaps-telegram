@@ -4,6 +4,7 @@ from time import sleep
 from urllib.parse import urlsplit
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+import pickle
 
 
 class IllegalURL(Exception):
@@ -20,8 +21,8 @@ class Capturer:
     webdriver.DesiredCapabilities.PHANTOMJS[
         'phantomjs.page.customHeaders.User-Agent'
     ] = chrome
-    hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
-                    ".style.display = 'none';")
+    """hide_sidebar = ("document.querySelector('.nk-onboarding-view')"
+                    ".style.display = 'none';")"""
 
     def start_driver(self) -> None:
         self.drv = webdriver.PhantomJS('phantomjs')
@@ -34,8 +35,13 @@ class Capturer:
         self.lock = Lock()
 
     def reboot(self) -> None:
+        self.drv.get("https://n.maps.yandex.ru")
+        self.cookies = pickle.dumps(self.drv.get_cookies())
         self.drv.quit()
         self.start_driver()
+        cookies = pickle.loads(self.cookies)
+        for cookie in cookies:
+            self.drv.add_cookie(cookie)
 
     @staticmethod
     def is_nmaps(url: str) -> bool:
@@ -55,8 +61,8 @@ class Capturer:
             self.drv.refresh()
             sleep(3)
 
-            if nmaps:
-                self.drv.execute_script(self.hide_sidebar)
+            """if nmaps:
+                self.drv.execute_script(self.hide_sidebar)"""
 
             sleep(4)
         except WebDriverException as e:
