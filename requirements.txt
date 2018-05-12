@@ -1,4 +1,4 @@
-python-telegram-bot==10.0.1
+python-telegram-bot==10.1.0
 selenium
 requests
 cloudinary
