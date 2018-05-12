@@ -98,7 +98,13 @@ def bookmarks(bot: Bot, update: Update) -> None:
         ],
         [
             InlineKeyboardButton('Транслитератор улиц',
-                                 url=STREET_TRANSLITERATOR)
+                                 url=STREET_TRANSLITERATOR),
+            InlineKeyboardButton('Подбор слов',
+                                 url='https://wordstat.yandex.ru')
+        ],
+        [
+            InlineKeyboardButton('FAQ НЯК',
+                                 url='https://tinyurl.com/FAQ-NYK')
         ]
     ]
     update.message.reply_text(BOT_CHS_LINK,
