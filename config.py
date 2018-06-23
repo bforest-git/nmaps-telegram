@@ -23,9 +23,10 @@ road_hashtag = re.compile('.*#({}|{}|{}|{}).*'.format(HASH_ROADBLOCK,
                                                       HASH_ROAD_ENG),
                           flags=re.S | re.I)
 
-FEEDBACK_REQUESTED, SEARCH_QUERY_REQUESTED = 1, 1
+FEEDBACK_REQUESTED, SEARCH_QUERY_REQUESTED, TRANSLITERATE_REQUESTED = 1, 1, 1
 
 main_menu = [[MENU_LINKS],
+             [MENU_TRANSLIT],
              [MENU_SEARCH_CLUB, MENU_SEARCH_RULES],
              [MENU_ROADS, MENU_FEEDBACK]]
 
@@ -43,3 +44,4 @@ roads_staff = os.getenv('ROADS_STAFF', 'Bagirov').split(',')
 instantview_url = 'https://t.me/iv?url={}&rhash=082e533d0deed1'
 rules_search_url = 'https://yandex.ru/support/search-results/?service=nmaps&query='
 club_search_url = 'https://yandex.ru/blog/narod-karta/search?text='
+transliterator = 'https://script.google.com/macros/s/AKfycbwCfGxk22dNUACxjRMULtVo4UzzRwfk49g9rIy-yycPMACtEps2/exec?'

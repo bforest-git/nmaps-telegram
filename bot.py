@@ -1,23 +1,25 @@
+import logging
+
+from telegram import Bot, Update, ChatAction
+from telegram.error import TimedOut
 from telegram.ext import Updater, MessageHandler, RegexHandler, Filters, \
     InlineQueryHandler, ConversationHandler, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, \
-    ReplyKeyboardMarkup, Bot, Update, ChatAction
-from telegram.error import TimedOut
+
 from config import *
-from phrases import *
-from capturer import Capturer, IllegalURL, YMTempUnsupported
-from bs4 import BeautifulSoup
-from functools import wraps
-from roads import new_roadblock, roadblock_callback, roadblock_filter
-from rss import rss
-from subscription import update_subscription, subscribed
-from inline import inline_search
+from features.bookmarks import bookmarks
+from features.feedback import request_feedback, receive_feedback
+from features.inline import inline_search
+from features.roads import new_roadblock, roadblock_callback, roadblock_filter
+from features.rss import rss
+from features.screenshot import screenshot
+from features.search import search, run_search
+from features.subscription import update_subscription, subscribed
+from features.transliterator import transliterate, retrieve_transliteration
+from features.welcome import welcome
+from features.wrappers import private
 from helpers import get_keyboard
-import logging
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-import requests
+from phrases import *
+from start import send_instructions
 
 
 # Enable logging
@@ -25,198 +27,6 @@ logging.basicConfig(format='[%(asctime)s] [%(levelname)s] [bot]\n%(message)s',
                     datefmt='%d-%m %H:%M:%S',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-cpt = Capturer()
-
-
-def private(f):
-    @wraps(f)
-    def wrapped_private(bot, update, *args, **kwargs):
-        if Filters.private.filter(update.message):
-            return f(bot, update, *args, **kwargs)
-    return wrapped_private
-
-
-def admins_only(f):
-    @wraps(f)
-    def wrapped_admins(bot, update, *args, **kwargs):
-        if update.message.from_user.id in admins:
-            return f(bot, update, *args, **kwargs)
-    return wrapped_admins
-
-
-@private
-def send_instructions(_bot: Bot, update: Update, start=False) -> None:
-    instructions = {MENU_ROADS: BOT_PRIVATE_ROAD_REPORT_USR,
-                    '/start inline-help': BOT_INLINE_INSTRUCTIONS,
-                    '/start': BOT_ACTION_SELECT}
-    if update.message.text in instructions:
-        text = instructions[update.message.text]
-    elif start:
-        text = BOT_ACTION_SELECT
-    else:
-        text = BOT_UNRECOGNIZED_MESSAGE
-    update.message.reply_markdown(
-        text,
-        reply_markup=get_keyboard(update,
-                                  subscribed(update.message.from_user.id)))
-
-
-@private
-def bookmarks(bot: Bot, update: Update) -> None:
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                'Правила',
-                url='https://yandex.ru/support/nmaps/rules_2.html'
-            ),
-            InlineKeyboardButton(
-                'Клуб',
-                url='https://yandex.ru/blog/narod-karta'
-            )
-        ],
-        [
-            InlineKeyboardButton('ПКК', url='https://pkk5.rosreestr.ru/'),
-            InlineKeyboardButton('ФИАС', url='https://fias.nalog.ru/')
-        ],
-        [
-            InlineKeyboardButton('ЕГРП365', url='https://egrp365.ru/map/'),
-            InlineKeyboardButton('TerraServer',
-                                 url='https://www.terraserver.com/')
-        ],
-        [
-            InlineKeyboardButton('Реформа ЖКХ',
-                                 url='https://www.reformagkh.ru/'),
-            InlineKeyboardButton('КЛАДР',
-                                 url='https://kladr-rf.ru/')
-        ],
-        [
-            InlineKeyboardButton('Водный реестр',
-                                 url='http://textual.ru/gvr'),
-            InlineKeyboardButton('ФГИС ТП',
-                                 url='http://fgis.economy.gov.ru/fgis/')
-        ],
-        [
-            InlineKeyboardButton('Транслитератор улиц',
-                                 url=STREET_TRANSLITERATOR),
-            InlineKeyboardButton('Подбор слов',
-                                 url='https://wordstat.yandex.ru')
-        ],
-        [
-            InlineKeyboardButton('FAQ НЯК',
-                                 url='https://tinyurl.com/FAQ-NYK')
-        ]
-    ]
-    update.message.reply_text(BOT_CHS_LINK,
-                              reply_markup=InlineKeyboardMarkup(keyboard))
-    send_instructions(bot, update, True)
-
-
-def screenshot(bot: Bot, update: Update) -> None:
-    for entity in update.message['entities']:
-        if entity['type'] == 'url':
-            url_start = int(entity['offset'])
-            url_end = url_start + int(entity['length'])
-            try:
-                bot.send_chat_action(update.effective_chat.id,
-                                     ChatAction.UPLOAD_PHOTO)
-                scrn = cpt.take_screenshot(
-                    update.message.text[url_start:url_end]
-                )
-                scrn_url = cloudinary.uploader.upload(scrn)['secure_url']
-                bot.send_photo(update.message.chat.id, scrn_url)
-                cpt.reboot()
-            except IllegalURL:
-                update.message.reply_text(BOT_ILLEGAL_URL)
-            except YMTempUnsupported:
-                update.message.reply_text(BOT_YM_SCREENS_BANNED)
-
-
-@private
-def request_feedback(_bot: Bot, update: Update) -> int:
-    update.message.reply_text(
-        BOT_SEND_FEEDBACK_USR,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
-                                         one_time_keyboard=True,
-                                         resize_keyboard=True))
-    return FEEDBACK_REQUESTED
-
-
-def receive_feedback(bot: Bot, update: Update) -> int:
-    update.message.reply_text(
-        BOT_FEEDBACK_SENT_USR,
-        reply_markup=get_keyboard(update,
-                                  subscribed(update.effective_user.id)))
-    bot.send_message(alexfox,
-                     BOT_DELIVER_FEEDBACK.format(update.effective_user.name,
-                                                 update.message.text),
-                     parse_mode='markdown')
-    return ConversationHandler.END
-
-
-@private
-def search(_bot: Bot, update: Update, user_data: dict) -> int:
-    if update.message.text == MENU_SEARCH_RULES:
-        user_data['search'] = 'rules'
-    else:
-        user_data['search'] = 'club'
-    update.message.reply_text(
-        BOT_SRCH_QUERY,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
-                                         resize_keyboard=True,
-                                         one_time_keyboard=True)
-    )
-    return SEARCH_QUERY_REQUESTED
-
-
-def run_search(bot: Bot, update: Update, user_data: dict) -> int:
-    if 'search' not in user_data:
-        update.message.reply_text(BOT_UNEXPECTED_ERROR)
-        send_instructions(bot, update, start=True)
-        return ConversationHandler.END
-    if user_data['search'] == 'rules':
-        retrieve_search_results(update, in_rules=True)
-    elif user_data['search'] == 'club':
-        retrieve_search_results(update, in_rules=False)
-
-    return SEARCH_QUERY_REQUESTED
-
-
-def retrieve_search_results(update: Update, in_rules: bool) -> None:
-    if in_rules:
-        page = requests.get(rules_search_url +
-                            update.message.text.replace(' ', '+'))
-    else:
-        page = requests.get(club_search_url +
-                            update.message.text.replace(' ', '+'))
-    soup = BeautifulSoup(page.text, 'lxml')
-    answer = ''
-
-    if in_rules:
-        for item in soup.find_all('div', class_='results__item'):
-            if item.find_all('div')[1].text != 'Народная карта':
-                continue
-            title = item.find('div').text.replace('&nbsp;', ' ')
-            link = 'https://yandex.ru/support/' + item.attrs['data-document']
-            text = item.find_all('div')[2].text
-            answer += '[' + title + '](' + link + ')\n```' \
-                      + text + '```\n____________________\n'
-    else:
-        for item in soup.find_all('a', class_='b-serp-item'):
-            title = item.find('h2').text
-            link = 'https://yandex.ru' + item['href']
-            answer += '[' + title + '](' + link + ')\n____________________\n'
-
-    if not answer:
-        update.message.reply_text(BOT_NOT_FOUND)
-    else:
-        update.message.reply_markdown(answer,
-                                      disable_web_page_preview=True)
-    update.message.reply_text(
-        BOT_SRCH_CONTINUE,
-        reply_markup=ReplyKeyboardMarkup([[MENU_RETURN]],
-                                         resize_keyboard=True,
-                                         one_time_keyboard=True))
 
 
 @private
@@ -238,34 +48,6 @@ def error(_bot: Bot, _update: Update, exc: Exception) -> None:
 @private
 def typing(bot: Bot, update: Update) -> None:
     bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
-
-
-def welcome(bot: Bot, update: Update) -> None:
-    user_name = update.effective_message.new_chat_members[0].name
-    to_welcome, chat, message = False, 0, ''
-
-    if update.effective_chat.id == nmaps_chat:
-        to_welcome = True
-        chat = nmaps_chat
-        message = BOT_WELCOME_NMAPS.format(user_name)
-    elif update.effective_chat.id == mods_chat:
-        to_welcome = True
-        chat = mods_chat
-        message = BOT_WELCOME_MODS.format(user_name)
-    elif update.effective_chat.id == roads_chat:
-        to_welcome = True
-        chat = roads_chat
-        message = BOT_WELCOME_ROADS.format(user_name)
-    elif update.effective_chat.id == english_chat:
-        to_welcome = True
-        chat = english_chat
-        message = BOT_WELCOME_ENG.format(user_name)
-
-    if to_welcome:
-        bot.send_message(chat,
-                         message,
-                         reply_to_message_id=update.message.message_id,
-                         disable_web_page_preview=True)
 
 
 def main():
@@ -315,6 +97,17 @@ def main():
             SEARCH_QUERY_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)',
                                                   run_search,
                                                   pass_user_data=True)]
+        },
+        fallbacks=[RegexHandler(MENU_RETURN,
+                                cancel,
+                                pass_user_data=True)]
+    ))
+    dp.add_handler(ConversationHandler(
+        entry_points=[RegexHandler(MENU_TRANSLIT,
+                                   transliterate)],
+        states={
+            TRANSLITERATE_REQUESTED: [RegexHandler(r'^(?!⬅ Вернуться)',
+                                                   retrieve_transliteration)]
         },
         fallbacks=[RegexHandler(MENU_RETURN,
                                 cancel,

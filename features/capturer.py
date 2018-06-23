@@ -2,6 +2,7 @@ from io import BytesIO
 from threading import Lock
 from time import sleep
 from urllib.parse import urlsplit
+
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 import pickle
