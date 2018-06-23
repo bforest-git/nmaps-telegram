@@ -1,12 +1,14 @@
 from telegram.error import TelegramError
 from telegram import Bot
 from itertools import chain
-from db import db
 from calendar import timegm
 from config import nmaps_chat, mods_chat, instantview_url
 from phrases import BOT_NEW_RSS
 import feedparser
 import logging
+
+from pony.orm import db_session
+from db import Rss, Subscriber
 
 
 log_level = logging.INFO
@@ -29,10 +31,10 @@ def rss(bot: Bot, _job) -> None:
     log.info('Starting RSS poster')
     new_entries, new_latest_date = get_new_entries()
 
-    c = db.cursor()
-    c.execute('DELETE FROM rss')
-    c.execute('INSERT INTO rss VALUES (%s)', (new_latest_date,))
-    db.commit()
+    with db_session:
+        Rss.select().delete()
+        Rss(last_published=new_latest_date)
+
     log.info('Wrote latest timestamp to database: {}'.format(new_latest_date))
 
     if new_entries:
@@ -44,16 +46,15 @@ def rss(bot: Bot, _job) -> None:
         log.info('Done sending posts!')
     else:
         log.info('No new posts')
-    c.close()
 
 
 def get_new_entries() -> tuple:
     feed = feedparser.parse('https://yandex.ru/blog/narod-karta/rss')
     entries = feed.entries
 
-    c = db.cursor()
-    c.execute('SELECT * FROM rss')
-    last_published = int(c.fetchone()[0])
+    with db_session:
+        last_published = int(Rss.get().last_published)
+
     log.info('Last published post timestamp is {}'.format(last_published))
     new_latest_date = last_published
 
@@ -79,11 +80,6 @@ def send_post(bot: Bot, url: str, subscribers: list) -> None:
             pass
 
 
+@db_session
 def get_subscribers() -> list:
-    c = db.cursor()
-    c.execute('SELECT id FROM subscribers')
-    subscribers = []
-    for id in c.fetchall():
-        subscribers.append(id[0])
-    c.close()
-    return subscribers
+    return [s.user_id for s in Subscriber.select(lambda s: s.user_id)]

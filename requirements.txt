@@ -7,3 +7,4 @@ lxml
 psycopg2
 feedparser
 algoliasearch
+pony

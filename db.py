@@ -1,22 +1,37 @@
 import os
-import psycopg2
+from pony.orm import Database, PrimaryKey, Required, Optional
+
 
 db_creds = {'host': os.getenv('DBHOST', 'localhost'),
-            'dbname': os.getenv('DBNAME', 'bot'),
+            'database': os.getenv('DBNAME', 'bot'),
             'user': os.getenv('DBUSER', 'bot'),
             'password': os.getenv('DBPASS', 'bot')}
 
-db = psycopg2.connect(**db_creds)
-c = db.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS roads (user_id bigint,
-                                               chat_id bigint,
-                                               chat_message_id bigint,
-                                               mods_message_id bigint,
-                                               roads_message_id bigint)''')
+db = Database(provider='postgres', **db_creds)
 
-c.execute('CREATE TABLE IF NOT EXISTS banned (id bigint primary key)')
-c.execute('CREATE TABLE IF NOT EXISTS rss (last_published bigint primary key)')
-c.execute('CREATE TABLE IF NOT EXISTS subscribers (id bigint primary key)')
 
-db.commit()
-c.close()
+class Roadblock(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    author = Required(int, size=64)
+    chat_id = Required(int, size=64)
+    chat_message_id = Required(int, size=64)
+    mods_message_id = Optional(int, size=64)
+    roads_message_id = Optional(int, size=64)
+
+
+class Banned(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    user_id = Required(int, size=64)
+
+
+class Rss(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    last_published = Required(int, size=64)
+
+
+class Subscriber(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    user_id = Required(int, size=64)
+
+
+db.generate_mapping(create_tables=True)
