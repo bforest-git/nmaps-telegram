@@ -1,9 +1,8 @@
-import cloudinary
+from cloudinary.uploader import upload
 from telegram import Bot, Update, ChatAction
 
 from features.capturer import Capturer, IllegalURL, YMTempUnsupported
 from phrases import BOT_ILLEGAL_URL, BOT_YM_SCREENS_BANNED
-
 
 cpt = Capturer()
 
@@ -19,7 +18,7 @@ def screenshot(bot: Bot, update: Update) -> None:
                 scrn = cpt.take_screenshot(
                     update.message.text[url_start:url_end]
                 )
-                scrn_url = cloudinary.uploader.upload(scrn)['secure_url']
+                scrn_url = upload(scrn)['secure_url']
                 bot.send_photo(update.message.chat.id, scrn_url)
                 cpt.reboot()
             except IllegalURL:
